@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "418719548890",
+    "firebase_url": "https://tightbudget2025-default-rtdb.firebaseio.com",
+    "project_id": "tightbudget2025",
+    "storage_bucket": "tightbudget2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:418719548890:android:6bcfa1cc14c0fab90eece3",
+        "android_client_info": {
+          "package_name": "com.example.tightbudget"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnH6Xf-zJyTEeBPuhKJx_4sJ7x4CG_u7Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
