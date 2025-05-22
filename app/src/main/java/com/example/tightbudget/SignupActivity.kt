@@ -10,10 +10,9 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.tightbudget.data.AppDatabase
 import com.example.tightbudget.databinding.ActivitySignupBinding
+import com.example.tightbudget.firebase.FirebaseUserManager
 import com.example.tightbudget.models.User
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 
 class SignupActivity : AppCompatActivity() {
@@ -23,10 +22,16 @@ class SignupActivity : AppCompatActivity() {
     // Add a variable to track checkbox state
     private var isTermsChecked = false
 
+    // Firebase User Manager
+    private lateinit var firebaseUserManager: FirebaseUserManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySignupBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Initialize Firebase User Manager
+        firebaseUserManager = FirebaseUserManager.getInstance()
 
         // Initialise password indicator strength indicator to an empty state
         binding.passwordStrengthText.text = ""
@@ -39,7 +44,7 @@ class SignupActivity : AppCompatActivity() {
         setupTextWatchers()
 
         // Log for debugging
-        Log.d(TAG, "SignupActivity created")
+        Log.d(TAG, "SignupActivity created with Firebase integration")
     }
 
     private fun setupClickListeners() {
@@ -96,9 +101,11 @@ class SignupActivity : AppCompatActivity() {
         // Guest login
         binding.guestLoginText.setOnClickListener {
             Log.d(TAG, "Continue as guest clicked")
-            // Navigate to main activity without login
-            // Intent(this, MainActivity::class.java).also { startActivity(it) }
-            Toast.makeText(this, "Guest login clicked", Toast.LENGTH_SHORT).show()
+            // Navigate to dashboard activity without login
+            Intent(this, DashboardActivity::class.java).also {
+                startActivity(it)
+                finish()
+            }
         }
     }
 
@@ -128,7 +135,6 @@ class SignupActivity : AppCompatActivity() {
         // 1. Length (at least 6 characters)
         // 2. Contains at least one digit
         // 3. Contains at least one special character
-        // TODO: Implement a more robust password strength algorithm
 
         when {
             password.isEmpty() -> {
@@ -232,33 +238,57 @@ class SignupActivity : AppCompatActivity() {
             return
         }
 
-        // Saving user to RoomDB
-        val db = AppDatabase.getDatabase(this)
-        val userDao = db.userDao()
+        // Show loading state
+        binding.createAccountButton.isEnabled = false
+        binding.createAccountButton.text = "Creating Account..."
 
+        // Create user using Firebase
         val newUser = User(
             fullName = fullName,
             email = email,
-            password = password
+            password = password,
+            balance = 0.0 // Default balance
         )
 
         lifecycleScope.launch {
             try {
-                userDao.insertUser(newUser)
+                // Create user in Firebase
+                val createdUser = firebaseUserManager.createUser(newUser)
+
+                Log.d(TAG, "User created successfully in Firebase with ID: ${createdUser.id}")
+
                 runOnUiThread {
+                    Toast.makeText(
+                        this@SignupActivity,
+                        "Account created successfully!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    // Navigate to success screen
                     val intent = Intent(this@SignupActivity, SuccessActivity::class.java)
                     intent.putExtra("USER_EMAIL", email)
                     startActivity(intent)
                     finish()
                 }
+
             } catch (e: Exception) {
-                Log.e(TAG, "Error creating account: ${e.message}")
+                Log.e(TAG, "Error creating account: ${e.message}", e)
+
                 runOnUiThread {
-                    Toast.makeText(
-                        this@SignupActivity,
-                        "Error creating account",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    // Reset button state
+                    binding.createAccountButton.isEnabled = true
+                    binding.createAccountButton.text = "CREATE ACCOUNT"
+
+                    // Show appropriate error message
+                    val errorMessage = when {
+                        e.message?.contains("already exists") == true ->
+                            "An account with this email already exists"
+                        e.message?.contains("network") == true ->
+                            "Network error. Please check your connection and try again"
+                        else -> "Error creating account. Please try again"
+                    }
+
+                    Toast.makeText(this@SignupActivity, errorMessage, Toast.LENGTH_LONG).show()
                 }
             }
         }

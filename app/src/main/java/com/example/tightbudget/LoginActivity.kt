@@ -7,26 +7,31 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.tightbudget.data.AppDatabase
 import com.example.tightbudget.databinding.ActivityLoginBinding
+import com.example.tightbudget.firebase.FirebaseUserManager
 import kotlinx.coroutines.launch
-import kotlin.apply
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private val TAG = "LoginActivity"
     private var isRememberMeChecked = false
 
+    // Firebase User Manager
+    private lateinit var firebaseUserManager: FirebaseUserManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Initialize Firebase User Manager
+        firebaseUserManager = FirebaseUserManager.getInstance()
+
         // Set up click listeners
         setupClickListeners()
 
         // Log for debugging
-        Log.d(TAG, "LoginActivity created")
+        Log.d(TAG, "LoginActivity created with Firebase integration")
     }
 
     private fun setupClickListeners() {
@@ -55,23 +60,23 @@ class LoginActivity : AppCompatActivity() {
         binding.forgotPassword.setOnClickListener {
             Log.d(TAG, "Forgot password clicked")
             // TODO: Implement forgot password functionality
-            Toast.makeText(this, "Forgot password clicked", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Forgot password functionality coming soon", Toast.LENGTH_SHORT).show()
         }
 
         // Social login buttons
         binding.googleLoginButton.setOnClickListener {
             Log.d(TAG, "Google login clicked")
-            Toast.makeText(this, "Google login clicked", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Google login coming soon", Toast.LENGTH_SHORT).show()
         }
 
         binding.facebookLoginButton.setOnClickListener {
             Log.d(TAG, "Facebook login clicked")
-            Toast.makeText(this, "Facebook login clicked", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Facebook login coming soon", Toast.LENGTH_SHORT).show()
         }
 
         binding.appleLoginButton.setOnClickListener {
             Log.d(TAG, "Apple login clicked")
-            Toast.makeText(this, "Apple login clicked", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Apple login coming soon", Toast.LENGTH_SHORT).show()
         }
 
         /// Guest login
@@ -110,35 +115,66 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        val db = AppDatabase.getDatabase(this)
-        val userDao = db.userDao()
+        // Show loading state
+        binding.loginButton.isEnabled = false
+        binding.loginButton.text = "Logging in..."
 
         lifecycleScope.launch {
-            val user = userDao.getUserByEmail(email)
+            try {
+                // Authenticate user with Firebase
+                val authenticatedUser = firebaseUserManager.authenticateUser(email, password)
 
-            if (user == null) {
-                // User does not exist
                 runOnUiThread {
-                    Toast.makeText(this@LoginActivity, "User does not exist", Toast.LENGTH_SHORT).show()
+                    // Reset button state
+                    binding.loginButton.isEnabled = true
+                    binding.loginButton.text = "LOGIN"
+
+                    if (authenticatedUser != null) {
+                        // Successful login
+                        Log.d(TAG, "User authenticated successfully: ${authenticatedUser.email}")
+
+                        // Save user session
+                        saveUserSession(authenticatedUser.id)
+
+                        Toast.makeText(this@LoginActivity, "Login successful", Toast.LENGTH_SHORT).show()
+
+                        // Navigate to dashboard
+                        val intent = Intent(this@LoginActivity, DashboardActivity::class.java)
+                        intent.putExtra("USER_EMAIL", email)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+
+                    } else {
+                        // Authentication failed
+                        Log.d(TAG, "Authentication failed for email: $email")
+                        Toast.makeText(
+                            this@LoginActivity,
+                            "Invalid email or password. Please try again.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
-            } else if (user.password != password) {
-                // Incorrect password
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during login: ${e.message}", e)
+
                 runOnUiThread {
-                    Toast.makeText(this@LoginActivity, "Incorrect password", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                // Successful login
-                saveUserSession(user.id)
+                    // Reset button state
+                    binding.loginButton.isEnabled = true
+                    binding.loginButton.text = "LOGIN"
 
-                Toast.makeText(this@LoginActivity, "Login successful", Toast.LENGTH_SHORT).show()
+                    // Show appropriate error message
+                    val errorMessage = when {
+                        e.message?.contains("network") == true ->
+                            "Network error. Please check your connection and try again"
+                        else -> "Login failed. Please try again"
+                    }
 
-                val intent = Intent(this@LoginActivity, DashboardActivity::class.java)
-                intent.putExtra("USER_EMAIL", email)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
+                    Toast.makeText(this@LoginActivity, errorMessage, Toast.LENGTH_LONG).show()
                 }
             }
         }
+    }
 
     // This method is called to save the user session
     private fun saveUserSession(userId: Int) {
@@ -146,9 +182,11 @@ class LoginActivity : AppCompatActivity() {
         sharedPreferences.edit().apply {
             putInt("current_user_id", userId)
             putBoolean("is_logged_in", true)
+            if (isRememberMeChecked) {
+                putBoolean("remember_me", true)
+            }
             apply()
         }
         Log.d(TAG, "Saved user session with ID: $userId")
     }
 }
-
