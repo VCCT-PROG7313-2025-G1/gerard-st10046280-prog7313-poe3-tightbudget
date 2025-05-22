@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <!-- Scrollable content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Header -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/gradient_header_rounded"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Create New Category"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:layout_centerHorizontal="true" />
+
+                <TextView
+                    android:id="@+id/closeCreateButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✕"
+                    android:textColor="@android:color/white"
+                    android:textSize="20sp"
+                    android:layout_alignParentEnd="true" />
+            </RelativeLayout>
+
+            <!-- Category Name Input -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Category Name"
+                android:textSize="14sp"
+                android:textColor="@color/text_dark"
+                android:layout_marginBottom="6dp" />
+
+            <EditText
+                android:id="@+id/categoryNameInput"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:hint="Enter category name..."
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:background="@drawable/edit_text_background"
+                android:textColorHint="@color/text_light"
+                android:textColor="@color/text_dark"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Budget Amount -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Budget Amount"
+                android:textSize="14sp"
+                android:textColor="@color/text_dark"
+                android:layout_marginBottom="6dp" />
+
+            <EditText
+                android:id="@+id/budgetInput"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:hint="R0,00"
+                android:inputType="numberDecimal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:background="@drawable/edit_text_background"
+                android:textColorHint="@color/text_light"
+                android:textColor="@color/text_dark"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Category Icon -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Category Icon"
+                android:textSize="14sp"
+                android:textColor="@color/text_dark"
+                android:layout_marginBottom="8dp" />
+
+            <GridLayout
+                android:id="@+id/iconGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="5"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Category Colour -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Category Colour"
+                android:textSize="14sp"
+                android:textColor="@color/text_dark"
+                android:layout_marginBottom="8dp" />
+
+            <GridLayout
+                android:id="@+id/colorGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="6"
+                android:layout_marginBottom="16dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Save Button pinned at bottom -->
+    <Button
+        android:id="@+id/saveCategoryButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save Category"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@color/primary_purple_dark"
+    android:textStyle="bold"
+    android:padding="12dp"
+    android:layout_margin="16dp" />
+
+</LinearLayout>

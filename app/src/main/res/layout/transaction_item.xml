@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:gravity="center_vertical"
+    android:background="@drawable/edit_text_background">
+
+    <!-- Emoji Icon -->
+    <TextView
+        android:id="@+id/transactionIcon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="🍔"
+        android:textSize="20sp"
+        android:textAlignment="center" />
+
+    <!-- Transaction Info -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="12dp">
+
+        <TextView
+            android:id="@+id/merchantName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Merchant Name"
+            android:textColor="@color/text_dark"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/transactionDetails"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Category · 10 Mar 2025"
+            android:textColor="@color/text_light"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- Amount -->
+    <TextView
+        android:id="@+id/transactionAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="-R98,00"
+        android:textColor="@color/text_dark"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+</LinearLayout>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cardQuickActions"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_marginBottom="16dp">
+
+    <!-- Add Expense -->
+    <LinearLayout
+        android:id="@+id/addExpenseButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/rounded_button"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/addExpenseIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:text="🧾"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:contentDescription="Add Expense" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add Expense"
+            android:textColor="@color/text_medium"
+            android:textSize="12sp"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+
+    <!-- View Budget -->
+    <LinearLayout
+        android:id="@+id/viewBudgetButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/rounded_button"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/viewBudgetIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:text="📊"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:contentDescription="View Budget" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="View Budget"
+            android:textColor="@color/text_medium"
+            android:textSize="12sp"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+
+    <!-- Goals -->
+    <LinearLayout
+        android:id="@+id/goalsButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/rounded_button"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/goalsIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:text="🎯"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:contentDescription="Goals" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Goals"
+            android:textColor="@color/text_medium"
+            android:textSize="12sp"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+</LinearLayout>

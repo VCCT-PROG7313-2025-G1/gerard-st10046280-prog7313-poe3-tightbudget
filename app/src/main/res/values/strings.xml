@@ -1,0 +1,52 @@
+<resources>
+    <!-- Login Screen -->
+    <string name="app_name">TightBudget</string>
+    <string name="welcome_back">Welcome Back!</string>
+    <string name="login_subtitle">Log in to manage your finances</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="username_hint">Enter your username</string>
+    <string name="password_hint">••••••••</string>
+    <string name="forgot_password">Forgot?</string>
+    <string name="remember_me">Remember me</string>
+    <string name="login">LOG IN</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="sign_up">Sign up</string>
+    <string name="or">or</string>
+    <string name="continue_as_guest">Continue as guest</string>
+
+    <!-- Sign Up Screen -->
+    <string name="create_account">Create Account</string>
+    <string name="join_tightbudget">Join TightBudget to manage your finances</string>
+    <string name="full_name">Full Name</string>
+    <string name="full_name_hint">Enter your full name</string>
+    <string name="email">Email</string>
+    <string name="email_hint">your.email@example.com</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="agree_terms">I agree to the </string>
+    <string name="terms">Terms</string>
+    <string name="and">and</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="create_account_button">CREATE ACCOUNT</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="log_in">Log in</string>
+    <string name="statistics">Statistics</string>
+    <string name="back_button" />
+    <string name="budget_goals">Budget Goals</string>
+    <string name="march_2025">March 2025</string>
+    <string name="change">▼ Change</string>
+    <string name="total_monthly_budget">Total Monthly Budget</string>
+    <string name="r18_000_00">R18 000,00</string>
+    <string name="last_month_r17_500_00">Last month: R17 500,00</string>
+    <string name="_2_9">+2.9%</string>
+    <string name="minimum_spending_goal">Minimum Spending Goal</string>
+    <string name="r0_00">R0.00</string>
+    <string name="_0_of_budget">0% of budget</string>
+    <string name="category_allocations">Category Allocations</string>
+    <string name="auto_balance">Auto-Balance</string>
+    <string name="add_category">+ Add Category</string>
+    <string name="_0_allocated">0% allocated</string>
+    <string name="total_r18_000_00">Total: R18 000,00</string>
+    <string name="copy_previous">Copy Previous</string>
+    <string name="save_changes">Save Changes</string>
+</resources>

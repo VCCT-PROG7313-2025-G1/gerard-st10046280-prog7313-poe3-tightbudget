@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_gray"
+    tools:context=".AddTransactionActivity">
+
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bottomNavBar"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Header -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/gradient_background"
+                android:paddingStart="16dp"
+                android:paddingTop="48dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="20dp">
+
+                <ImageView
+                    android:id="@+id/backButton"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:contentDescription="@string/back_button"
+                    android:src="@drawable/ic_back"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:tint="@android:color/white" />
+
+                <TextView
+                    android:id="@+id/headerTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Add Transaction"
+                    android:textColor="@android:color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- Card Container for Content -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:background="@color/white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="25dp"
+                    android:paddingEnd="25dp"
+                    android:paddingTop="24dp"
+                    android:paddingBottom="24dp">
+
+                    <!-- Transaction Type Toggle -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Transaction Type"
+                        android:textColor="@color/text_medium"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/transactionTypeToggle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="24dp"
+                        app:singleSelection="true"
+                        app:selectionRequired="true">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/expenseButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="Expense"
+                            android:textColor="@color/white"
+                            app:backgroundTint="@color/teal_light"
+                            app:cornerRadius="24dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/incomeButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="Income"
+                            android:textColor="@color/text_medium"
+                            app:backgroundTint="#F5F5F5"
+                            app:cornerRadius="24dp"
+                            app:strokeColor="@color/border_color"
+                            app:strokeWidth="1dp" />
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                    <!-- Merchant/Income Source -->
+                    <TextView
+                        android:id="@+id/merchantInputLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Merchant"
+                        android:textColor="@color/text_medium"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <EditText
+                        android:id="@+id/merchantInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:background="@drawable/edit_text_background"
+                        android:hint="Who did you pay?"
+                        android:inputType="text"
+                        android:textSize="16sp"
+                        android:textColorHint="@color/text_hint"
+                        android:textColor="@color/text_medium"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:layout_marginBottom="24dp" />
+
+                    <!-- Amount -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Amount"
+                        android:textColor="@color/text_medium"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <EditText
+                        android:id="@+id/amountInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:background="@drawable/edit_text_background"
+                        android:hint="R0,00"
+                        android:inputType="numberDecimal"
+                        android:textSize="18sp"
+                        android:textColorHint="@color/text_hint"
+                        android:textColor="@color/text_dark"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:layout_marginBottom="24dp" />
+
+                    <!-- Category -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Category"
+                        android:textColor="@color/text_medium"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none"
+                        android:layout_marginBottom="8dp">
+
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/categoryChipGroup"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:singleSelection="true"
+                            app:selectionRequired="true">
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/foodChip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🍔"
+                                app:chipBackgroundColor="#F0F0F0"
+                                app:chipCornerRadius="24dp" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/transportChip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🚗"
+                                app:chipBackgroundColor="#F0F0F0"
+                                app:chipCornerRadius="24dp" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/entertainmentChip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🎬"
+                                app:chipBackgroundColor="#F0F0F0"
+                                app:chipCornerRadius="24dp" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/housingChip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🏠"
+                                app:chipBackgroundColor="#F0F0F0"
+                                app:chipCornerRadius="24dp" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/addCategoryChip"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="+"
+                                app:chipBackgroundColor="#F0F0F0"
+                                app:chipCornerRadius="24dp" />
+                        </com.google.android.material.chip.ChipGroup>
+                    </HorizontalScrollView>
+
+                    <!-- Category Options -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="24dp">
+
+                        <TextView
+                            android:id="@+id/viewAllCategoriesButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="View All Categories"
+                            android:textColor="@color/primary_purple_light"
+                            android:textSize="14sp" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/createNewCategoryButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Create New"
+                            android:textColor="@color/primary_purple_light"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Selected Category Display -->
+                    <TextView
+                        android:id="@+id/selectedCategoryDisplay"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Food"
+                        android:textColor="@color/text_medium"
+                        android:textSize="16sp"
+                        android:background="@drawable/edit_text_background"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="12dp"
+                        android:paddingBottom="12dp"
+                        android:layout_marginBottom="24dp" />
+
+                    <!-- Transaction Date -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Date"
+                        android:textColor="@color/text_medium"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:id="@+id/transactionDateButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:background="@drawable/edit_text_background"
+                        android:text="Today, 15 March 2025"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_medium"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:drawableEnd="@null"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="24dp" />
+
+                    <!-- Recurring Date Picker -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Recurring Transaction"
+                        android:textColor="@color/text_medium"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="24dp"
+                        android:gravity="center_vertical">
+
+                        <Switch
+                            android:id="@+id/recurringSwitch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:thumbTint="@color/primary_purple_light"
+                            android:trackTint="@color/primary_purple_light" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Toggle for monthly recurring"
+                            android:textColor="@color/text_light"
+                            android:textSize="14sp"
+                            android:layout_marginStart="8dp" />
+                    </LinearLayout>
+
+                    <!-- Recurring Date Picker -->
+                    <TextView
+                        android:id="@+id/recurringDatePicker"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Monthly on the 15th"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_medium"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:background="@drawable/edit_text_background"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="24dp"
+                        android:visibility="gone" />
+
+                    <!-- Description -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Description"
+                        android:textColor="@color/text_medium"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <EditText
+                        android:id="@+id/descriptionInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="100dp"
+                        android:background="@drawable/edit_text_background"
+                        android:hint="Add a note..."
+                        android:gravity="top"
+                        android:padding="16dp"
+                        android:textSize="16sp"
+                        android:inputType="textMultiLine"
+                        android:textColorHint="@color/text_hint"
+                        android:textColor="@color/text_medium"
+                        android:layout_marginBottom="24dp" />
+
+                    <!-- Receipt Photo -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Receipt (Optional)"
+                        android:textColor="@color/text_medium"
+                        android:textSize="16sp"
+                        android:layout_marginBottom="12dp" />
+
+                    <FrameLayout
+                        android:id="@+id/photoContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="120dp"
+                        android:background="@drawable/edit_text_background"
+                        android:layout_marginBottom="32dp">
+
+                        <LinearLayout
+                            android:id="@+id/addPhotoButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_gravity="center"
+                            android:gravity="center">
+
+                            <TextView
+                                android:id="@+id/cameraIconTextView"
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:text="📷"
+                                android:textSize="24sp"
+                                android:gravity="center" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Add Photo"
+                                android:textColor="@color/text_medium"
+                                android:textSize="14sp"
+                                android:layout_marginTop="8dp" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:id="@+id/receiptImageView"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:visibility="gone" />
+                    </FrameLayout>
+
+                    <!-- Save Button -->
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/saveTransactionButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:background="@drawable/button_gradient"
+                        android:text="SAVE TRANSACTION"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <!-- Points Indicator -->
+                    <TextView
+                        android:id="@+id/pointsIndicator"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="+10 points 🏆"
+                        android:textColor="@color/primary_purple_light"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Navigation Bar -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@color/primary_purple_light"
+        app:labelVisibilityMode="unlabeled"
+        app:itemIconTint="@color/bottom_nav_item_colour"
+        app:itemTextColor="@color/bottom_nav_item_colour"
+        app:menu="@menu/bottom_navigation_menu" />
+</RelativeLayout>

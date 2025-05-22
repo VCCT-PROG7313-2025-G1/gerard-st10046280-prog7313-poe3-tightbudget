@@ -1,0 +1,48 @@
+# This GitHub Actions workflow automates Continuous Integration (CI) for the TightBudget project.
+# It runs tests on Kotlin code using Gradle for branches 'main', 'develop', and 'feature/*'.
+# Updates and notifications are triggered on push and pull request events.
+
+name: Kotlin CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop      # Include 'develop' branch for push events
+      - feature/*    # Include any feature branch (e.g., feature/xyz)
+      - chore/*      # Include any chore branch (e.g., chore/xyz)
+  pull_request:
+    branches:
+      - main
+      - develop      # Include 'develop' branch for pull request events
+      - feature/*    # Include any feature branch (e.g., feature/xyz)
+      - chore/*      # Include any chore branch (e.g., chore/xyz)
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up JDK for Kotlin
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Step 3: Cache Gradle dependencies
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # Step 4: Run tests
+      - name: Run tests
+        run: ./gradlew test

@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_gray">
+
+    <!-- Konfetti View -->
+    <nl.dionsegijn.konfetti.xml.KonfettiView
+        android:id="@+id/konfettiView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Header Background with Logo and Branding -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:background="@drawable/gradient_background">
+
+            <!-- Logo & Branding -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
+                android:layout_marginTop="50dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:id="@+id/appLogo"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/app_icon"
+                    android:contentDescription="TightBudget Logo" />
+
+                <TextView
+                    android:id="@+id/appName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="TightBudget"
+                    android:textColor="@color/white"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Decorative Elements -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
+                android:layout_marginTop="95dp"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/decorBar1"
+                    android:layout_width="70dp"
+                    android:layout_height="6dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@color/white"
+                    android:alpha="0.6" />
+
+                <View
+                    android:id="@+id/decorBar2"
+                    android:layout_width="40dp"
+                    android:layout_height="6dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@color/white"
+                    android:alpha="0.3" />
+
+                <View
+                    android:id="@+id/decorBar3"
+                    android:layout_width="30dp"
+                    android:layout_height="6dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@color/white"
+                    android:alpha="0.6" />
+            </LinearLayout>
+
+            <!-- Decorative Circles -->
+            <View
+                android:id="@+id/decorCircle1"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end"
+                android:layout_marginTop="80dp"
+                android:layout_marginEnd="80dp"
+                android:alpha="0.1"
+                android:background="@drawable/ic_circle"
+                android:backgroundTint="@color/blue_light" />
+
+            <View
+                android:id="@+id/decorCircle2"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="end"
+                android:layout_marginTop="70dp"
+                android:layout_marginEnd="50dp"
+                android:alpha="0.2"
+                android:background="@drawable/ic_circle"
+                android:backgroundTint="@color/teal_light" />
+
+            <View
+                android:id="@+id/decorCircle3"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_gravity="end"
+                android:layout_marginTop="90dp"
+                android:layout_marginEnd="35dp"
+                android:alpha="0.2"
+                android:background="@drawable/ic_circle"
+                android:backgroundTint="@color/primary_purple_light" />
+
+            <View
+                android:id="@+id/decorCircle4"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="30dp"
+                android:layout_marginTop="120dp"
+                android:alpha="0.1"
+                android:background="@drawable/ic_circle"
+                android:backgroundTint="@color/primary_purple_light" />
+
+            <View
+                android:id="@+id/decorCircle5"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_marginStart="45dp"
+                android:layout_marginTop="135dp"
+                android:alpha="0.2"
+                android:background="@drawable/ic_circle"
+                android:backgroundTint="@color/blue_light" />
+        </FrameLayout>
+
+        <!-- Card Container with Negative Margin -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="-80dp"
+            android:orientation="vertical">
+
+            <!-- Success Card using card_background.xml -->
+            <LinearLayout
+                android:id="@+id/successCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="25dp"
+                android:layout_marginEnd="25dp"
+                android:layout_marginBottom="25dp"
+                android:background="@drawable/card_background"
+                android:elevation="6dp"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:padding="24dp">
+
+                <!-- Checkmark Container with Circle Background -->
+                <FrameLayout
+                    android:id="@+id/checkmarkContainer"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_gravity="center_horizontal">
+
+                    <!-- Background Circle -->
+                    <View
+                        android:id="@+id/checkBgCircle"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"/>
+
+                    <!-- Checkmark Icon -->
+                    <ImageView
+                        android:id="@+id/checkIcon"
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_check_circle"
+                        android:contentDescription="Success Check"
+                        app:tint="@color/teal_light" />
+                </FrameLayout>
+
+                <!-- Success Title -->
+                <TextView
+                    android:id="@+id/successTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Success!"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="24dp"
+                    android:textColor="@color/text_dark" />
+
+                <!-- Subtitle -->
+                <TextView
+                    android:id="@+id/subtitleText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Your account has been created"
+                    android:layout_marginTop="8dp"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_light" />
+
+                <!-- Confirmation Email -->
+                <TextView
+                    android:id="@+id/confirmationText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:background="@drawable/confirmation_email_box"
+                    android:padding="16dp"
+                    android:text="A confirmation email has been sent to your.email@example.com"
+                    android:textAlignment="center"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_dark" />
+
+                <!-- Continue Button -->
+                <Button
+                    android:id="@+id/continueToDashboardButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="Continue to Dashboard"
+                    android:textAllCaps="false"
+                    android:layout_marginTop="32dp"
+                    android:backgroundTint="@color/teal_light"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold" />
+
+                <!-- Resend Email Text -->
+                <TextView
+                    android:id="@+id/resendEmailText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Resend Email"
+                    android:layout_marginTop="16dp"
+                    android:textColor="@color/primary_purple_light"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

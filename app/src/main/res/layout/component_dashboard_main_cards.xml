@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<LinearLayout
+    android:id="@+id/dashboardMainCardsRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="25dp"
+    android:paddingEnd="25dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp">
+
+    <!-- Include all your styled components here -->
+    <include layout="@layout/component_card_balance" />
+    <include layout="@layout/component_card_challenges" />
+    <include layout="@layout/component_card_quick_actions" />
+    <include layout="@layout/component_card_spending_by_category" />
+    <include layout="@layout/component_card_achievements" />
+    <include layout="@layout/component_card_budget_goals" />
+    <include layout="@layout/component_card_recent_transactions" />
+
+</LinearLayout>
+</merge>

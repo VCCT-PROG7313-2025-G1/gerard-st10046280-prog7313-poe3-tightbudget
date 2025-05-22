@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:gravity="center">
+
+    <!-- Badge Emoji (background set in adapter via DrawableUtils) -->
+    <TextView
+        android:id="@+id/badgeEmoji"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:gravity="center"
+        android:text="🏆"
+        android:textSize="28sp"
+        android:textColor="@android:color/black"
+        android:layout_gravity="center" />
+
+    <!-- Badge title -->
+    <TextView
+        android:id="@+id/badgeTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Budget Master"
+        android:textColor="@color/text_dark"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:maxLines="1" />
+
+    <!-- Badge subtitle (optional detail like 'Level 10') -->
+    <TextView
+        android:id="@+id/badgeSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Level 10"
+        android:textColor="@color/text_light"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:maxLines="1" />
+</LinearLayout>

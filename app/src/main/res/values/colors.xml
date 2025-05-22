@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="red_light">#FF5252</color>
+    <color name="green_light">#4CAF50</color>
+    <color name="red">#FF6B6B</color>
+    <color name="blue">#3A82F7</color>
+    <color name="purple">#7E57C2</color>
+    <color name="light_blue_bg">#E0F4FF</color>
+
+    <!-- TightBudget colour scheme -->
+    <color name="primary_purple_dark">#4A2BA6</color>
+    <color name="primary_purple_light">#6B45D2</color>
+    <color name="teal_light">#7FD1CC</color>
+    <color name="blue_light">#4AADDE</color>
+    <color name="background_gray">#F5F7FA</color>
+    <color name="text_dark">#333333</color>
+    <color name="text_medium">#555555</color>
+    <color name="text_light">#666666</color>
+    <color name="text_hint">#AAAAAA</color>
+    <color name="border_color">#DDDDDD</color>
+
+    <color name="orange">#FFA726</color>
+    <color name="yellow">#FFCB45</color>
+    <color name="gray_medium">#9E9E9E</color>
+    <color name="gray_light">#E0E0E0</color>
+</resources>

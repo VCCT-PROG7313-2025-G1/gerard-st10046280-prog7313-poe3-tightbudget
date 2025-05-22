@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/budgetCategoryItem"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/card_background"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_marginBottom="12dp">
+
+    <!-- Top Row: Category Info -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Emoji + Category Name -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Emoji Icon Placeholder -->
+            <TextView
+                android:id="@+id/categoryEmoji"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:text="🍔"
+                android:textSize="22sp"
+                android:gravity="center"
+                android:textAlignment="center"
+                android:textColor="@color/text_dark" />
+
+            <!-- Category Name + Avg -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="8dp">
+
+                <TextView
+                    android:id="@+id/categoryName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Food"
+                    android:textColor="@color/text_dark"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/categoryAverage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Avg: R4100"
+                    android:textColor="@color/text_light"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Amount Input -->
+        <EditText
+            android:id="@+id/categoryAmountInput"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:inputType="numberDecimal"
+            android:background="@drawable/edit_text_background"
+            android:hint="R 0.00"
+            android:textColor="@color/text_dark"
+            android:gravity="center"
+            android:textSize="14sp" />
+
+        <!-- Percentage -->
+        <TextView
+            android:id="@+id/categoryPercentage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="22%"
+            android:textColor="@color/text_medium"
+            android:textSize="14sp"
+            android:layout_gravity="end" />
+    </LinearLayout>
+
+    <!-- Allocation Slider -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp">
+
+        <!-- SeekBar for allocation -->
+        <SeekBar
+            android:id="@+id/categoryAllocationSeekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:progress="20" />
+
+        <!-- Min/Max Labels -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0%"
+                android:textSize="10sp"
+                android:textColor="@color/text_light" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="100%"
+                android:textSize="10sp"
+                android:textColor="@color/text_light" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Spending Progress Indicator -->
+    <LinearLayout
+        android:id="@+id/spendingProgressContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/spendingProgressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:progress="75"
+            android:progressTint="@color/teal_light" />
+
+        <TextView
+            android:id="@+id/spendingProgressText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="75%"
+            android:textSize="12sp"
+            android:layout_marginStart="8dp"
+            android:textColor="@color/text_medium" />
+    </LinearLayout>
+</LinearLayout>

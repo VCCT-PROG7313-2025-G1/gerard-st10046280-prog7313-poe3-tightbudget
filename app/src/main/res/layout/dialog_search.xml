@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:iconifiedByDefault="false"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:imeOptions="actionSearch"
+        android:queryHint="Search transactions..."
+        app:queryHint="Search transactions..."
+        app:iconifiedByDefault="false"
+        android:background="@drawable/edit_text_background" />
+
+</LinearLayout>

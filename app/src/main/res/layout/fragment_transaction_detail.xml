@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Header with title and close button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:background="@drawable/gradient_header_rounded"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Transaction Details"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/closeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✕"
+                android:textColor="@color/white"
+                android:textSize="20sp" />
+        </LinearLayout>
+
+        <!-- Main Content -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:gravity="center_horizontal">
+
+            <!-- Emoji Icon -->
+            <TextView
+                android:id="@+id/detailEmoji"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:text="🍔"
+                android:textSize="28sp"
+                android:gravity="center"
+                android:textColor="@color/text_dark" />
+
+            <!-- Amount -->
+            <TextView
+                android:id="@+id/detailAmount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-R289,45"
+                android:textColor="@color/text_dark"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp" />
+
+            <!-- Merchant Label + Value -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Merchant"
+                android:textColor="@color/text_light"
+                android:textSize="12sp"
+                android:layout_marginTop="16dp" />
+
+            <TextView
+                android:id="@+id/detailMerchant"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Checkers"
+                android:textSize="16sp"
+                android:textColor="@color/text_dark"
+                android:textStyle="bold" />
+
+            <!-- Date Label + Value -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Date &amp; Time"
+                android:textColor="@color/text_light"
+                android:textSize="12sp"
+                android:layout_marginTop="16dp" />
+
+            <TextView
+                android:id="@+id/detailDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="15 March 2025, 10:24 AM"
+                android:textSize="14sp"
+                android:textColor="@color/text_dark" />
+
+            <!-- Transaction Type -->
+            <TextView
+                android:id="@+id/detailType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Expense"
+                android:textColor="@color/text_dark"
+                android:textSize="14sp"
+                android:layout_marginTop="8dp" />
+
+            <!-- Category -->
+            <TextView
+                android:id="@+id/detailCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/category_chip_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:text="Food"
+                android:textSize="14sp"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:layout_marginTop="24dp" />
+
+            <!-- Receipt Section (Only visible when a receipt is available) -->
+            <LinearLayout
+                android:id="@+id/receiptSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="24dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Receipt"
+                    android:textColor="@color/text_light"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="8dp" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/edit_text_background">
+
+                    <ImageView
+                        android:id="@+id/receiptImage"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="Receipt"
+                        android:adjustViewBounds="true" />
+
+                    <TextView
+                        android:id="@+id/viewFullImageBtn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="View Full Image"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="8dp"
+                        android:background="@color/primary_purple_light"
+                        android:layout_gravity="center_horizontal|bottom"
+                        android:layout_marginBottom="16dp" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Notes Label + Box -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Notes"
+                android:textColor="@color/text_light"
+                android:textSize="12sp"
+                android:layout_marginTop="24dp" />
+
+            <TextView
+                android:id="@+id/detailNotes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/notes_background"
+                android:padding="12dp"
+                android:text="Weekly grocery shopping. Bought items for dinner party on Saturday."
+                android:textColor="@color/text_dark"
+                android:textSize="14sp" />
+
+            <!-- Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="24dp">
+
+                <Button
+                    android:id="@+id/editButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Edit"
+                    android:background="@drawable/button_outline"
+                    android:textColor="@color/text_dark" />
+
+                <Button
+                    android:id="@+id/deleteButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="Delete"
+                    android:backgroundTint="@color/red_light"
+                    android:textColor="@color/white" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

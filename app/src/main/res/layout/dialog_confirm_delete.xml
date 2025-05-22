@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_background"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center_horizontal">
+
+    <!-- Warning Icon -->
+    <TextView
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:text="❌"
+        android:textSize="32sp"
+        android:gravity="center"
+        android:backgroundTint="@color/red_light"/>
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete Transaction?"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="@color/text_dark"
+        android:layout_marginTop="16dp" />
+
+    <!-- Message -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="This action cannot be undone.\nAll transaction data will be lost."
+        android:textSize="14sp"
+        android:textColor="@color/text_light"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/cancelButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:background="@drawable/button_outline"
+            android:textColor="@color/text_dark" />
+
+        <Button
+            android:id="@+id/confirmDeleteButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Delete"
+            android:backgroundTint="@color/red_light"
+            android:textColor="@color/white" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardBudgetGoals"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    app:cardCornerRadius="15dp"
+    app:cardElevation="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Title Row -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Budget Goals"
+                android:textColor="@color/text_dark"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_alignParentStart="true" />
+
+            <TextView
+                android:id="@+id/manageBudgetButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Manage"
+                android:textColor="@color/primary_purple_light"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_alignParentEnd="true" />
+        </RelativeLayout>
+
+        <!-- Budget Summary -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total Budget"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_medium" />
+
+                <TextView
+                    android:id="@+id/totalBudgetAmount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="R0.00"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_dark" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Spent So Far"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_medium" />
+
+                <TextView
+                    android:id="@+id/spentSoFarAmount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="R0.00"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_dark" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Remaining"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_medium" />
+
+                <TextView
+                    android:id="@+id/remainingAmount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="R0.00"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/green_light" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Overall progress -->
+        <ProgressBar
+            android:id="@+id/overallBudgetProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:layout_marginBottom="16dp"
+            android:progress="0"
+            android:progressTint="@color/teal_light"
+            android:background="@color/background_gray" />
+
+        <!-- Min spending goal -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/minSpendingGoalText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Minimum Spending Goal:"
+                android:textSize="12sp"
+                android:textColor="@color/text_medium"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/minSpendingGoalAmount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="R0.00"
+                android:textSize="12sp"
+                android:textColor="@color/text_medium"
+                android:layout_marginStart="4dp"
+                android:visibility="visible" />
+        </LinearLayout>
+
+        <!-- Create budget message (initially hidden) -->
+        <TextView
+            android:id="@+id/createBudgetMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="You haven't set a budget for this month. Tap 'Manage' to create one."
+            android:textSize="14sp"
+            android:textColor="@color/orange"
+            android:gravity="center"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
+
+        <!-- Container for category items -->
+        <LinearLayout
+            android:id="@+id/categoryContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <!-- Categories will be added dynamically in code -->
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

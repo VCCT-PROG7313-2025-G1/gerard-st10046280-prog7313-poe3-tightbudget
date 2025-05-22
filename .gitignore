@@ -1,0 +1,22 @@
+# Ignore Gradle build outputs
+/build/
+/captures/
+/.externalNativeBuild/
+/.cxx/
+
+# Ignore Gradle specific files
+.gradle/
+local.properties
+
+# Ignore all .iml module files
+*.iml
+
+# Ignore Android Studio specific files except important ones
+.idea/*
+!.idea/runConfigurations/
+!.idea/misc.xml
+!.idea/modules.xml
+.idea/checkstyle-idea.xml
+
+# Ignore macOS system files
+.DS_Store
