@@ -15,11 +15,13 @@ import kotlin.coroutines.suspendCoroutine
 /**
  * Firebase User Manager handles user authentication and data storage in Firebase Realtime Database
  * This replaces the local Room database for user management in Part 3 of the POE
+ * Uses clean incremental IDs (1, 2, 3, 4...)
  */
 class FirebaseUserManager {
 
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
     private val usersRef: DatabaseReference = database.getReference("users")
+    private val counterRef: DatabaseReference = database.getReference("userCounter")
 
     companion object {
         private const val TAG = "FirebaseUserManager"
@@ -37,9 +39,9 @@ class FirebaseUserManager {
     }
 
     /**
-     * Creates a new user in Firebase Realtime Database
+     * Creates a new user in Firebase Realtime Database with incremental ID
      * @param user The user object to create
-     * @return The created user with Firebase-generated ID
+     * @return The created user with incremental ID
      */
     suspend fun createUser(user: User): User {
         return try {
@@ -49,22 +51,51 @@ class FirebaseUserManager {
                 throw Exception("User with email ${user.email} already exists")
             }
 
+            // Get next incremental ID
+            val nextId = getNextUserId()
+
             // Generate a new key for the user
             val userKey = usersRef.push().key
                 ?: throw Exception("Failed to generate user key")
 
-            // Create user with Firebase-generated ID
-            val firebaseUser = user.copy(id = userKey.hashCode())
+            // Create user with incremental ID
+            val firebaseUser = user.copy(id = nextId)
 
-            // Store user in Firebase
+            // Store user in Firebase using the Firebase key
             usersRef.child(userKey).setValue(firebaseUser).await()
 
-            Log.d(TAG, "User created successfully with key: $userKey")
+            Log.d(TAG, "User created successfully with ID: $nextId and Firebase key: $userKey")
             firebaseUser
 
         } catch (e: Exception) {
             Log.e(TAG, "Error creating user: ${e.message}", e)
             throw e
+        }
+    }
+
+    /**
+     * Get the next incremental user ID (1, 2, 3, 4...)
+     */
+    private suspend fun getNextUserId(): Int {
+        return suspendCoroutine { continuation ->
+            counterRef.get().addOnSuccessListener { snapshot ->
+                val currentCounter = snapshot.getValue(Int::class.java) ?: 0
+                val nextId = currentCounter + 1
+
+                // Update the counter in Firebase
+                counterRef.setValue(nextId).addOnSuccessListener {
+                    Log.d(TAG, "User counter updated to: $nextId")
+                    continuation.resume(nextId)
+                }.addOnFailureListener { exception ->
+                    Log.e(TAG, "Error updating user counter: ${exception.message}")
+                    // Fallback to timestamp if counter update fails
+                    continuation.resume(System.currentTimeMillis().toInt())
+                }
+            }.addOnFailureListener { exception ->
+                Log.e(TAG, "Error getting user counter: ${exception.message}")
+                // Fallback to timestamp if counter fails
+                continuation.resume(System.currentTimeMillis().toInt())
+            }
         }
     }
 
