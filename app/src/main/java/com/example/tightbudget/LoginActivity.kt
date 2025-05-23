@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.tightbudget.databinding.ActivityLoginBinding
 import com.example.tightbudget.firebase.FirebaseUserManager
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
@@ -107,7 +108,7 @@ class LoginActivity : AppCompatActivity() {
 
     // Function to perform login action
     private fun performLogin() {
-        val email = binding.emailInput.text.toString().trim()
+        val email = binding.emailInput.text.toString().trim().toLowerCase(Locale.ROOT)
         val password = binding.passwordInput.text.toString()
 
         if (email.isEmpty() || password.isEmpty()) {
@@ -190,3 +191,4 @@ class LoginActivity : AppCompatActivity() {
         Log.d(TAG, "Saved user session with ID: $userId")
     }
 }
+

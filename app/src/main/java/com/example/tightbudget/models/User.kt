@@ -13,8 +13,8 @@ import androidx.room.PrimaryKey
 data class User(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val fullName: String,
-    val email: String,
-    val password: String,
+    val fullName: String = "",
+    val email: String = "",
+    val password: String = "",
     val balance: Double = 0.0
 )

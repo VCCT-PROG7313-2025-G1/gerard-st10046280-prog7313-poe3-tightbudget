@@ -14,6 +14,7 @@ import com.example.tightbudget.databinding.ActivitySignupBinding
 import com.example.tightbudget.firebase.FirebaseUserManager
 import com.example.tightbudget.models.User
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class SignupActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySignupBinding
@@ -206,7 +207,7 @@ class SignupActivity : AppCompatActivity() {
 
     private fun createAccount() {
         val fullName = binding.fullNameInput.text.toString().trim()
-        val email = binding.emailInput.text.toString().trim()
+        val email = binding.emailInput.text.toString().trim().toLowerCase(Locale.ROOT)
         val password = binding.passwordInput.text.toString()
         val confirmPassword = binding.confirmPasswordInput.text.toString()
 
@@ -294,3 +295,4 @@ class SignupActivity : AppCompatActivity() {
         }
     }
 }
+
