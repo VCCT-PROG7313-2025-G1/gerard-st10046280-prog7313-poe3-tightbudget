@@ -23,6 +23,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.tightbudget.data.AppDatabase
 import com.example.tightbudget.databinding.ActivityAddTransactionBinding
+import com.example.tightbudget.firebase.FirebaseTransactionManager
 import com.example.tightbudget.models.CategoryItem
 import com.example.tightbudget.models.Transaction
 import com.example.tightbudget.ui.CategoryPickerBottomSheet
@@ -528,7 +529,9 @@ class AddTransactionActivity : AppCompatActivity() {
         }
     }
 
-    // Saves the transaction details and returns to the Dashboard
+    /**
+     * Saves the transaction details using Firebase and returns to the Dashboard
+     */
     private fun saveTransaction() {
         try {
             val amountText = binding.amountInput.text.toString()
@@ -544,8 +547,9 @@ class AddTransactionActivity : AppCompatActivity() {
             // Get the current user ID
             val userId = getCurrentUserId()
 
-            val db = AppDatabase.getDatabase(this)
-            val transactionDao = db.transactionDao()
+            // Show saving state
+            binding.saveTransactionButton.isEnabled = false
+            binding.saveTransactionButton.text = "Saving..."
 
             lifecycleScope.launch {
                 try {
@@ -561,9 +565,11 @@ class AddTransactionActivity : AppCompatActivity() {
                         isRecurring = isRecurring
                     )
 
-                    val transactionId = transactionDao.insertTransaction(transaction)
+                    // Save to Firebase instead of Room
+                    val firebaseTransactionManager = FirebaseTransactionManager.getInstance()
+                    val savedTransaction = firebaseTransactionManager.createTransaction(transaction)
 
-                    Log.d(TAG, "Transaction saved with ID: $transactionId")
+                    Log.d(TAG, "Transaction saved to Firebase with ID: ${savedTransaction.id}")
                     Log.d(TAG, "Merchant/Source: $merchant")
                     Log.d(TAG, "Description: $description")
                     Log.d(TAG, "Category: $category")
@@ -579,32 +585,55 @@ class AddTransactionActivity : AppCompatActivity() {
                     )
                     Log.d(TAG, "Recurring: $isRecurring")
 
-                    Toast.makeText(
-                        this@AddTransactionActivity,
-                        "Transaction saved successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    runOnUiThread {
+                        // Reset button state
+                        binding.saveTransactionButton.isEnabled = true
+                        binding.saveTransactionButton.text = "SAVE TRANSACTION"
 
-                    // Return to Dashboard
-                    startActivity(
-                        Intent(
+                        Toast.makeText(
                             this@AddTransactionActivity,
-                            DashboardActivity::class.java
+                            "Transaction saved to Firebase successfully!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        // Return to Dashboard
+                        startActivity(
+                            Intent(
+                                this@AddTransactionActivity,
+                                DashboardActivity::class.java
+                            )
                         )
-                    )
-                    finish()
+                        finish()
+                    }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error saving transaction", e)
-                    Toast.makeText(
-                        this@AddTransactionActivity,
-                        "Error saving transaction: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Log.e(TAG, "Error saving transaction to Firebase", e)
+
+                    runOnUiThread {
+                        // Reset button state
+                        binding.saveTransactionButton.isEnabled = true
+                        binding.saveTransactionButton.text = "SAVE TRANSACTION"
+
+                        val errorMessage = when {
+                            e.message?.contains("network") == true ->
+                                "Network error. Please check your connection and try again"
+                            else -> "Error saving transaction: ${e.message}"
+                        }
+
+                        Toast.makeText(
+                            this@AddTransactionActivity,
+                            errorMessage,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error in saveTransaction", e)
             Toast.makeText(this, "An error occurred: ${e.message}", Toast.LENGTH_SHORT).show()
+
+            // Reset button state
+            binding.saveTransactionButton.isEnabled = true
+            binding.saveTransactionButton.text = "SAVE TRANSACTION"
         }
     }
 
