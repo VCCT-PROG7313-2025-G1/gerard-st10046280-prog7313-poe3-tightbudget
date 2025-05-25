@@ -27,10 +27,10 @@ import androidx.room.PrimaryKey
 data class BudgetGoal(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val userId: Int,                 // Links to the user
-    val month: Int,                  // 1-12 for Jan-Dec
-    val year: Int,                   // e.g., 2025
-    val totalBudget: Double,         // Total monthly budget
-    val minimumSpendingGoal: Double, // Minimum spending goal (new requirement)
-    val isActive: Boolean = true     // Whether this is the current active budget
+    val userId: Int = 0,                  // <--- Default
+    val month: Int = 1,                   // <--- Default (e.g., January)
+    val year: Int = 2025,                 // <--- Default
+    val totalBudget: Double = 0.0,        // <--- Default
+    val minimumSpendingGoal: Double = 0.0,// <--- Default
+    val isActive: Boolean = true          // <--- Default
 )
