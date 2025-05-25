@@ -14,11 +14,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.tightbudget.adapters.CategorySpendingAdapter
 import com.example.tightbudget.data.AppDatabase
 import com.example.tightbudget.databinding.ActivityCategorySpendingBinding
+import com.example.tightbudget.firebase.FirebaseBudgetManager
+import com.example.tightbudget.firebase.FirebaseDataManager
 import com.example.tightbudget.models.CategorySpendingItem
 import com.example.tightbudget.models.Transaction
 import com.example.tightbudget.models.BudgetGoal
 import com.example.tightbudget.models.CategoryBudget
 import com.example.tightbudget.ui.CategoryDetailBottomSheet
+import com.example.tightbudget.utils.DrawableUtils.getCategoryColor
 import com.example.tightbudget.utils.EmojiUtils
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -28,7 +31,8 @@ class CategorySpendingActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCategorySpendingBinding
     private lateinit var adapter: CategorySpendingAdapter
-    private lateinit var db: AppDatabase
+    private lateinit var firebaseDataManager: FirebaseDataManager
+    private lateinit var firebaseBudgetManager: FirebaseBudgetManager
 
     private var userId: Int = -1
     private var categoryItems = mutableListOf<CategorySpendingItem>()
@@ -60,8 +64,8 @@ class CategorySpendingActivity : AppCompatActivity() {
         binding = ActivityCategorySpendingBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initialize database
-        db = AppDatabase.getDatabase(this)
+        firebaseDataManager = FirebaseDataManager.getInstance()
+        firebaseBudgetManager = FirebaseBudgetManager.getInstance()
 
         // Get current user ID
         userId = getCurrentUserId()
@@ -307,34 +311,26 @@ class CategorySpendingActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // Load transactions for the selected period
-                val transactionDao = db.transactionDao()
+                // Load transactions for the selected period from Firebase
                 transactions = if (userId != -1) {
-                    transactionDao.getTransactionsForPeriod(userId, startDate, endDate)
+                    firebaseDataManager.getTransactionsForPeriod(userId, startDate, endDate)
                         .filter { it.isExpense } // Only include expenses
                 } else {
                     // Generate sample data for users who aren't logged in
                     generateSampleTransactions()
                 }
 
-                // Load categories to get emoji and color information
-                val categoryDao = db.categoryDao()
-                val categories = categoryDao.getAllCategories()
+                // Load budget information from Firebase
+                val (activeBudgetGoal, categoryBudgets) = loadBudgetInfoFromFirebase()
 
                 // Calculate spending by category
                 val categoryGroups = transactions.groupBy { it.category }
-
-                // Load budget information
-                val (activeBudgetGoal, categoryBudgets) = loadBudgetInfo()
 
                 // Create CategorySpendingItems
                 categoryItems.clear()
                 var totalSpent = 0.0
 
                 categoryGroups.forEach { (categoryName, categoryTransactions) ->
-                    // Find the category for emoji and color
-                    val category = categories.find { it.name.equals(categoryName, ignoreCase = true) }
-
                     // Find budget for this category
                     val budgetAmount = categoryBudgets.find {
                         it.categoryName.equals(categoryName, ignoreCase = true)
@@ -348,8 +344,8 @@ class CategorySpendingActivity : AppCompatActivity() {
                     val item = CategorySpendingItem(
                         id = categoryName,
                         name = categoryName,
-                        emoji = category?.emoji ?: EmojiUtils.getCategoryEmoji(categoryName),
-                        color = category?.color ?: "#CCCCCC",
+                        emoji = EmojiUtils.getCategoryEmoji(categoryName),
+                        color = getCategoryColor(categoryName), // Helper method
                         amount = spendingAmount,
                         budget = budgetAmount,
                         transactionCount = categoryTransactions.size
@@ -365,17 +361,12 @@ class CategorySpendingActivity : AppCompatActivity() {
                     }
 
                     if (!exists) {
-                        // Find the category for emoji and color
-                        val category = categories.find {
-                            it.name.equals(budget.categoryName, ignoreCase = true)
-                        }
-
                         // Create CategorySpendingItem with zero spending
                         val item = CategorySpendingItem(
                             id = budget.categoryName,
                             name = budget.categoryName,
-                            emoji = category?.emoji ?: EmojiUtils.getCategoryEmoji(budget.categoryName),
-                            color = category?.color ?: "#CCCCCC",
+                            emoji = EmojiUtils.getCategoryEmoji(budget.categoryName),
+                            color = getCategoryColor(budget.categoryName),
                             amount = 0.0,
                             budget = budget.allocation,
                             transactionCount = 0
@@ -402,7 +393,7 @@ class CategorySpendingActivity : AppCompatActivity() {
                 }
 
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading category data: ${e.message}", e)
+                Log.e(TAG, "Error loading category data from Firebase: ${e.message}", e)
 
                 runOnUiThread {
                     // Hide loading indicator
@@ -419,43 +410,55 @@ class CategorySpendingActivity : AppCompatActivity() {
         }
     }
 
+    private fun getCategoryColor(categoryName: String): String {
+        return when (categoryName.lowercase()) {
+            "housing" -> "#4CAF50"
+            "food", "groceries" -> "#FF9800"
+            "transport" -> "#2196F3"
+            "entertainment" -> "#9C27B0"
+            "utilities" -> "#FFC107"
+            "health" -> "#E91E63"
+            "shopping" -> "#00BCD4"
+            "education" -> "#3F51B5"
+            else -> "#9E9E9E"
+        }
+    }
+
     /**
      * Load active budget goal and category budgets
      */
-    private suspend fun loadBudgetInfo(): Pair<BudgetGoal?, List<CategoryBudget>> {
+    private suspend fun loadBudgetInfoFromFirebase(): Pair<BudgetGoal?, List<CategoryBudget>> {
         if (userId == -1) {
             return Pair(null, emptyList())
         }
 
-        try {
-            val budgetGoalDao = db.budgetGoalDao()
-
+        return try {
             // Get the month and year from the start date
             val calendar = Calendar.getInstance()
             calendar.time = startDate
             val month = calendar.get(Calendar.MONTH) + 1 // 0-based to 1-based
             val year = calendar.get(Calendar.YEAR)
 
-            // Try to get budget for the period month/year
-            var budgetGoal = budgetGoalDao.getBudgetGoalForMonth(userId, month, year)
+            // Try to get budget for the period month/year from Firebase
+            var budgetGoal = firebaseBudgetManager.getBudgetGoalForMonth(userId, month, year)
 
             // If not found, try to get the active budget
             if (budgetGoal == null) {
-                budgetGoal = budgetGoalDao.getActiveBudgetGoal(userId)
+                budgetGoal = firebaseBudgetManager.getActiveBudgetGoal(userId)
             }
 
             // Get category budgets if budget goal exists
             val categoryBudgets = if (budgetGoal != null) {
-                db.categoryBudgetDao().getCategoryBudgetsForGoal(budgetGoal.id)
+                firebaseBudgetManager.getCategoryBudgetsForGoal(budgetGoal.id)
             } else {
                 emptyList()
             }
 
-            return Pair(budgetGoal, categoryBudgets)
+            Pair(budgetGoal, categoryBudgets)
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading budget info: ${e.message}", e)
-            return Pair(null, emptyList())
+            Log.e(TAG, "Error loading budget info from Firebase: ${e.message}", e)
+            Pair(null, emptyList())
         }
     }
 
