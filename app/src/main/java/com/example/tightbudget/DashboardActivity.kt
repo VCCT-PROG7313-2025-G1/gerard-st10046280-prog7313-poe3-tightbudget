@@ -18,14 +18,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tightbudget.adapters.TransactionAdapter
-import com.example.tightbudget.data.AppDatabase
+import com.example.tightbudget.firebase.FirebaseDataManager
 import com.example.tightbudget.models.BudgetGoal
 import com.example.tightbudget.models.CategoryBudget
 import com.example.tightbudget.models.Transaction
 import com.example.tightbudget.ui.TransactionDetailBottomSheet
 import com.example.tightbudget.utils.CategoryConstants
 import com.example.tightbudget.utils.ChartUtils
-import com.example.tightbudget.utils.DashboardDataManager
 import com.example.tightbudget.utils.DashboardHelper
 import com.example.tightbudget.utils.DrawableUtils
 import com.example.tightbudget.utils.EmojiUtils
@@ -35,13 +34,13 @@ import java.util.Date
 
 /**
  * Dashboard screen showing financial summary, goals, charts and quick access buttons.
+ * Updated to use Firebase instead of Room database.
  */
 class DashboardActivity : AppCompatActivity() {
     private val TAG = "DashboardActivity"
 
-    // Database and data manager
-    private lateinit var db: AppDatabase
-    private lateinit var dataManager: DashboardDataManager
+    // Firebase data manager - replaces Room database
+    private lateinit var firebaseDataManager: FirebaseDataManager
 
     // UI components for easy access
     private lateinit var welcomeTextView: TextView
@@ -60,9 +59,8 @@ class DashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
-        // Initialize the database and data manager
-        db = AppDatabase.getDatabase(this)
-        dataManager = DashboardDataManager(db)
+        // Initialize Firebase data manager
+        firebaseDataManager = FirebaseDataManager.getInstance()
 
         // Find UI components
         welcomeTextView = findViewById(R.id.welcomeText)
@@ -99,7 +97,7 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     /**
-     * Load all financial data for the dashboard
+     * Load all financial data for the dashboard using Firebase
      */
     private fun loadFinancialData() {
         if (currentUserId == -1) {
@@ -113,66 +111,83 @@ class DashboardActivity : AppCompatActivity() {
                 // Clear any existing data displays first
                 clearFinancialDisplays()
 
-                // Show loading indicators if needed
-                // binding.dataLoadingIndicator.visibility = View.VISIBLE
+                // Show loading indicator
+                showLoadingState(true)
 
-                // Load budget goal for the current user
-                currentBudgetGoal = dataManager.loadActiveBudgetGoal(currentUserId)
+                Log.d(TAG, "Loading financial data from Firebase for user $currentUserId")
+
+                // Load budget goal for the current user from Firebase
+                currentBudgetGoal = firebaseDataManager.loadActiveBudgetGoal(currentUserId)
 
                 if (currentBudgetGoal != null) {
+                    Log.d(TAG, "Found active budget goal: ${currentBudgetGoal!!.totalBudget}")
+
                     // Initialize the budget goals section
                     initBudgetGoalsSection()
 
-                    // Load category budgets for the current user's budget goal
-                    categoryBudgets = dataManager.loadCategoryBudgets(currentBudgetGoal!!.id)
+                    // Load category budgets for the current user's budget goal from Firebase
+                    categoryBudgets = firebaseDataManager.loadCategoryBudgets(currentBudgetGoal!!.id)
+                    Log.d(TAG, "Loaded ${categoryBudgets.size} category budgets from Firebase")
 
-                    // Load spending data for the current user
-                    val allSpendingData = dataManager.getCurrentMonthSpendingByCategory(currentUserId)
-                    val totalSpending = dataManager.getCurrentMonthTotalSpending(currentUserId)
+                    // Load spending data for the current user from Firebase
+                    val allSpendingData = firebaseDataManager.getCurrentMonthSpendingByCategory(currentUserId)
+                    val totalSpending = firebaseDataManager.getCurrentMonthTotalSpending(currentUserId)
 
-                    // Update UI with real data
-                    updateBudgetSummary(currentBudgetGoal!!, totalSpending)
-                    updateCategoryProgressBars(allSpendingData)
-                    updateSpendingChart(allSpendingData) // Keep all categories in the chart
+                    Log.d(TAG, "Current month spending: $totalSpending, categories: ${allSpendingData.size}")
 
-                    Log.d(
-                        TAG,
-                        "Loaded budget goal ($${currentBudgetGoal!!.totalBudget}) and " +
-                                "${categoryBudgets.size} category budgets, " +
-                                "${allSpendingData.size} spending categories for user $currentUserId"
-                    )
+                    // Update UI with real data from Firebase
+                    runOnUiThread {
+                        updateBudgetSummary(currentBudgetGoal!!, totalSpending)
+                        updateCategoryProgressBars(allSpendingData)
+                        updateSpendingChart(allSpendingData)
+                        showLoadingState(false)
+                    }
+
+                    Log.d(TAG, "Successfully loaded budget goal and spending data from Firebase")
                 } else {
-                    // Initialize the budget goals section (clear or add placeholders)
-                    initBudgetGoalsSection()
-
                     // No budget goal found - show placeholder or prompt to create one
-                    showNoBudgetGoalUI()
+                    runOnUiThread {
+                        initBudgetGoalsSection()
+                        showNoBudgetGoalUI()
+                        showLoadingState(false)
+                    }
 
-                    Log.d(TAG, "No budget goal found for user $currentUserId")
+                    Log.d(TAG, "No active budget goal found in Firebase for user $currentUserId")
                 }
 
-                // Load transactions for the current user
+                // Load transactions for the current user from Firebase
                 setupRecentTransactions()
 
-                // Hide loading indicators if needed
-                // binding.dataLoadingIndicator.visibility = View.GONE
-
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading financial data", e)
+                Log.e(TAG, "Error loading financial data from Firebase: ${e.message}", e)
 
-                // Hide loading indicators if needed
-                // binding.dataLoadingIndicator.visibility = View.GONE
+                runOnUiThread {
+                    showLoadingState(false)
 
-                Toast.makeText(
-                    this@DashboardActivity,
-                    "Error loading financial data: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                    val errorMessage = when {
+                        e.message?.contains("network") == true ->
+                            "Network error. Please check your connection and try again"
+                        e.message?.contains("permission") == true ->
+                            "Permission denied. Please check your Firebase configuration"
+                        else -> "Error loading data: ${e.message}"
+                    }
 
-                // Show fallback UI
-                showNoBudgetGoalUI()
+                    Toast.makeText(this@DashboardActivity, errorMessage, Toast.LENGTH_LONG).show()
+
+                    // Show fallback UI
+                    showNoBudgetGoalUI()
+                }
             }
         }
+    }
+
+    /**
+     * Show/hide loading indicators
+     */
+    private fun showLoadingState(show: Boolean) {
+        // You can add loading indicators here if you have them in your layout
+        // For now, we'll just log the state
+        Log.d(TAG, if (show) "Showing loading state" else "Hiding loading state")
     }
 
     /**
@@ -194,7 +209,7 @@ class DashboardActivity : AppCompatActivity() {
         categoryBudgets = emptyList()
 
         // Clear the current budget goal
-        currentBudgetGoal = null;
+        currentBudgetGoal = null
 
         // Get the categories container and clear it (for logged-in users)
         val root = findViewById<View>(R.id.dashboardMainCardsRoot)
@@ -205,85 +220,94 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     /**
-     * Load user information with proper fallback strategy
+     * Load user information using Firebase
      */
     private fun loadUserInformation() {
         lifecycleScope.launch {
             try {
-                val previousUserId = currentUserId  // Store the previous user ID
-
+                val previousUserId = currentUserId
                 currentUserId = getCurrentUserId()
 
                 if (currentUserId != previousUserId) {
-                    clearFinancialDisplays()  // Clear data if user has changed
+                    clearFinancialDisplays()
                 }
 
                 if (currentUserId != -1) {
-                    // User is logged in via ID from SharedPreferences
-                    val user = db.userDao().getUserById(currentUserId)
+                    // User is logged in - get user data from Firebase
+                    Log.d(TAG, "Loading user information from Firebase for user $currentUserId")
 
-                    if (user != null) {
-                        // Set welcome message and balance
-                        welcomeTextView.text = "Welcome back, ${user.fullName}!"
-                        balanceAmountView.text = "R${String.format("%,.2f", user.balance)}"
-                        Log.d(TAG, "Loaded user from SharedPreferences ID: ${user.fullName}")
-                    } else {
-                        // If user not found by ID, try the email from intent
-                        val userEmail = intent.getStringExtra("USER_EMAIL")
-                        if (!userEmail.isNullOrEmpty()) {
-                            val userByEmail = db.userDao().getUserByEmail(userEmail)
-                            if (userByEmail != null) {
-                                welcomeTextView.text = "Welcome back, ${userByEmail.fullName}!"
-                                balanceAmountView.text = "R${String.format("%,.2f", userByEmail.balance)}"
-                                // Save the user ID since we found them by email
-                                saveUserSession(userByEmail.id)
-                                currentUserId = userByEmail.id
-                                Log.d(TAG, "Loaded user from email and saved ID: ${userByEmail.id}")
+                    val user = firebaseDataManager.getUserById(currentUserId)
 
-                                // Refresh financial data with newly found user ID
-                                loadFinancialData()
+                    runOnUiThread {
+                        if (user != null) {
+                            // Set welcome message and balance
+                            welcomeTextView.text = "Welcome back, ${user.fullName}!"
+                            balanceAmountView.text = "R${String.format("%,.2f", user.balance)}"
+                            Log.d(TAG, "Loaded user from Firebase: ${user.fullName}")
+                        } else {
+                            // Try by email if user not found by ID
+                            val userEmail = intent.getStringExtra("USER_EMAIL")
+                            if (!userEmail.isNullOrEmpty()) {
+                                lifecycleScope.launch {
+                                    try {
+                                        val userByEmail = firebaseDataManager.getUserByEmail(userEmail)
+                                        if (userByEmail != null) {
+                                            runOnUiThread {
+                                                welcomeTextView.text = "Welcome back, ${userByEmail.fullName}!"
+                                                balanceAmountView.text = "R${String.format("%,.2f", userByEmail.balance)}"
+                                            }
+                                            // Save the user ID since we found them by email
+                                            saveUserSession(userByEmail.id)
+                                            currentUserId = userByEmail.id
+                                            Log.d(TAG, "Found user by email in Firebase: ${userByEmail.id}")
+                                            // Refresh financial data with newly found user ID
+                                            loadFinancialData()
+                                        } else {
+                                            runOnUiThread { showDefaultUserInfo() }
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "Error finding user by email in Firebase: ${e.message}", e)
+                                        runOnUiThread { showDefaultUserInfo() }
+                                    }
+                                }
                             } else {
                                 showDefaultUserInfo()
                             }
-                        } else {
-                            showDefaultUserInfo()
                         }
                     }
                 } else {
-                    // If no user ID in preferences, try the email from intent
+                    // Try to find user by email from intent
                     val userEmail = intent.getStringExtra("USER_EMAIL")
                     if (!userEmail.isNullOrEmpty()) {
-                        val userByEmail = db.userDao().getUserByEmail(userEmail)
+                        val userByEmail = firebaseDataManager.getUserByEmail(userEmail)
                         if (userByEmail != null) {
-                            welcomeTextView.text = "Welcome back, ${userByEmail.fullName}!"
-                            balanceAmountView.text = "R${String.format("%,.2f", userByEmail.balance)}"
-                            // Save the user ID since we found them by email
+                            runOnUiThread {
+                                welcomeTextView.text = "Welcome back, ${userByEmail.fullName}!"
+                                balanceAmountView.text = "R${String.format("%,.2f", userByEmail.balance)}"
+                            }
                             saveUserSession(userByEmail.id)
                             currentUserId = userByEmail.id
-                            Log.d(TAG, "Loaded user from email and saved ID: ${userByEmail.id}")
-
-                            // Refresh financial data with newly found user ID
+                            Log.d(TAG, "Found and saved user from email: ${userByEmail.id}")
                             loadFinancialData()
                         } else {
-                            showDefaultUserInfo()
+                            runOnUiThread { showDefaultUserInfo() }
                         }
                     } else {
-                        showDefaultUserInfo()
+                        runOnUiThread { showDefaultUserInfo() }
                     }
                 }
 
-                // Properly initialize the UI based on user login status
+                // Show placeholder data if user not logged in
                 if (currentUserId == -1) {
-                    // User not logged in - show placeholder data
-                    showPlaceholderData()
+                    runOnUiThread { showPlaceholderData() }
                 }
 
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading user information", e)
-                showDefaultUserInfo()
-
-                // Still show placeholders if there's an error
-                showPlaceholderData()
+                Log.e(TAG, "Error loading user information from Firebase: ${e.message}", e)
+                runOnUiThread {
+                    showDefaultUserInfo()
+                    showPlaceholderData()
+                }
             }
         }
     }
@@ -291,8 +315,6 @@ class DashboardActivity : AppCompatActivity() {
     private fun showDefaultUserInfo() {
         welcomeTextView.text = "Welcome, Guest!"
         balanceAmountView.text = "R0.00"
-
-        // Reset current user ID to ensure guest experience
         currentUserId = -1
     }
 
@@ -315,15 +337,15 @@ class DashboardActivity : AppCompatActivity() {
             val minGoalText = root.findViewById<TextView>(R.id.minSpendingGoalText)
             val minGoalAmount = root.findViewById<TextView>(R.id.minSpendingGoalAmount)
 
-            minGoalText.visibility = View.VISIBLE
-            minGoalAmount.visibility = View.VISIBLE
-            minGoalAmount.text = "R%.2f".format(budgetGoal.minimumSpendingGoal)
+            minGoalText?.visibility = View.VISIBLE
+            minGoalAmount?.visibility = View.VISIBLE
+            minGoalAmount?.text = "R%.2f".format(budgetGoal.minimumSpendingGoal)
 
             // Add visual indicator if below minimum goal
             if (totalSpending < budgetGoal.minimumSpendingGoal) {
-                minGoalAmount.setTextColor(getColor(R.color.orange))
+                minGoalAmount?.setTextColor(getColor(R.color.orange))
             } else {
-                minGoalAmount.setTextColor(getColor(R.color.text_medium))
+                minGoalAmount?.setTextColor(getColor(R.color.text_medium))
             }
         }
 
@@ -383,16 +405,12 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         // Clear ALL existing category views when user is logged in
-        // Only keep the container itself
         if (currentUserId != -1) {
             categoryContainer.removeAllViews()
         }
 
         // Only show categories with transactions or budget for signed-in users
         if (currentUserId != -1) {
-            // Get all categories that either have spending or a budget
-            val allCategoriesToShow = (spendingData.keys + categoryBudgetMap.keys).toSet()
-
             // Limit to top 4 categories using DashboardHelper
             val topCategories = DashboardHelper.limitTopCategories(spendingData, 4)
 
@@ -400,7 +418,7 @@ class DashboardActivity : AppCompatActivity() {
             Log.d(TAG, "Categories to display: $topCategories")
 
             // Process each category
-            for (categoryName in topCategories.keys) { // Iterate only through the top categories
+            for (categoryName in topCategories.keys) {
                 // Find spending for this category (default to 0 if none)
                 val amount = spendingData[categoryName] ?: 0.0
 
@@ -420,44 +438,6 @@ class DashboardActivity : AppCompatActivity() {
             // For non-logged in users, add placeholder categories
             addPlaceholderCategories(categoryContainer)
         }
-    }
-
-
-    /**
-     * Get emoji for a category using the central EmojiUtils
-     */
-    private fun getCategoryEmoji(categoryName: String): String {
-        return EmojiUtils.getCategoryEmoji(categoryName)
-    }
-
-    /**
-     * Helper function to find category amount by checking multiple possible category names
-     */
-    private fun findCategoryAmount(
-        spendingData: Map<String, Double>,
-        vararg categoryNames: String
-    ): Double {
-        for (name in categoryNames) {
-            spendingData[name.lowercase()]?.let { return it }
-        }
-        return 0.0
-    }
-
-    /**
-     * Helper function to find category budget by checking multiple possible category names
-     */
-    private fun findCategoryBudget(
-        budgetMap: Map<String, CategoryBudget>,
-        vararg categoryNames: String
-    ): Double {
-        for (name in categoryNames) {
-            budgetMap[name]?.let { return it.allocation }
-            // Try case-insensitive match if needed
-            budgetMap.entries.firstOrNull { it.key.equals(name, ignoreCase = true) }?.let {
-                return it.value.allocation
-            }
-        }
-        return 0.0
     }
 
     /**
@@ -482,7 +462,7 @@ class DashboardActivity : AppCompatActivity() {
             )
         }
 
-        // Get proper emoji for this category - FIXED
+        // Get proper emoji for this category
         val emoji = EmojiUtils.getCategoryEmoji(categoryName)
 
         // Category name with emoji
@@ -598,7 +578,7 @@ class DashboardActivity : AppCompatActivity() {
                 background = DrawableUtils.getCategoryCircle(this@DashboardActivity, categoryName)
             }
 
-            // Get emoji for the category - FIXED
+            // Get emoji for the category
             val emoji = EmojiUtils.getCategoryEmoji(categoryName)
 
             val label = TextView(this).apply {
@@ -632,9 +612,7 @@ class DashboardActivity : AppCompatActivity() {
 
         // Show a message prompting the user to create a budget
         val createBudgetMessage = root.findViewById<TextView>(R.id.createBudgetMessage)
-        if (createBudgetMessage != null) {
-            createBudgetMessage.visibility = View.VISIBLE
-        }
+        createBudgetMessage?.visibility = View.VISIBLE
 
         // Show empty chart
         chartContainer.removeAllViews()
@@ -658,9 +636,7 @@ class DashboardActivity : AppCompatActivity() {
 
         // Clear the category container
         val categoryContainer = root.findViewById<LinearLayout>(R.id.categoryContainer)
-        if (categoryContainer != null) {
-            categoryContainer.removeAllViews()
-        }
+        categoryContainer?.removeAllViews()
     }
 
     private fun showPlaceholderData() {
@@ -747,9 +723,7 @@ class DashboardActivity : AppCompatActivity() {
 
             val label = TextView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
-                text = "$emoji ${
-                    categoryName.lowercase().replaceFirstChar { it.uppercase() }
-                }"
+                text = "$emoji ${categoryName.lowercase().replaceFirstChar { it.uppercase() }}"
                 setTextColor(getColor(R.color.text_medium))
                 textSize = 14f
             }
@@ -773,40 +747,24 @@ class DashboardActivity : AppCompatActivity() {
      */
     private fun addPlaceholderCategories(container: LinearLayout) {
         // Housing sample placeholder
-        val housingView = createCategoryView(
-            CategoryConstants.HOUSING,
-            650.0,
-            800.0
-        )
+        val housingView = createCategoryView(CategoryConstants.HOUSING, 650.0, 800.0)
         container.addView(housingView)
 
         // Food sample placeholder
-        val foodView = createCategoryView(
-            CategoryConstants.FOOD,
-            425.75,
-            400.0
-        )
+        val foodView = createCategoryView(CategoryConstants.FOOD, 425.75, 400.0)
         container.addView(foodView)
 
         // Transport sample placeholder
-        val transportView = createCategoryView(
-            CategoryConstants.TRANSPORT,
-            232.50,
-            250.0
-        )
+        val transportView = createCategoryView(CategoryConstants.TRANSPORT, 232.50, 250.0)
         container.addView(transportView)
 
         // Entertainment sample placeholder
-        val entertainmentView = createCategoryView(
-            CategoryConstants.ENTERTAINMENT,
-            205.02,
-            150.0
-        )
+        val entertainmentView = createCategoryView(CategoryConstants.ENTERTAINMENT, 205.02, 150.0)
         container.addView(entertainmentView)
     }
 
     /**
-     * Sets up the recent transactions list.
+     * Sets up the recent transactions list using Firebase data.
      */
     private fun setupRecentTransactions() {
         val root = findViewById<View>(R.id.dashboardMainCardsRoot)
@@ -857,11 +815,11 @@ class DashboardActivity : AppCompatActivity() {
             return
         }
 
-        // Load actual transactions using the data manager
+        // Load actual transactions using Firebase data manager
         lifecycleScope.launch {
             try {
-                // Get recent transactions for the current user, limiting to top 4
-                val transactions = dataManager.loadRecentTransactions(currentUserId, 4)
+                // Get recent transactions for the current user from Firebase, limiting to top 4
+                val transactions = firebaseDataManager.loadRecentTransactions(currentUserId, 4)
 
                 runOnUiThread {
                     if (transactions.isEmpty()) {
@@ -871,28 +829,29 @@ class DashboardActivity : AppCompatActivity() {
                             emptyView.visibility = View.VISIBLE
                             recyclerView.visibility = View.GONE
                         }
-                        Log.d(TAG, "No transactions found for user $currentUserId")
+                        Log.d(TAG, "No transactions found in Firebase for user $currentUserId")
                     } else {
-                        // Update adapter with real data
+                        // Update adapter with real data from Firebase
                         val emptyView = root.findViewById<TextView>(R.id.emptyTransactionsMessage)
                         if (emptyView != null) {
                             emptyView.visibility = View.GONE
                             recyclerView.visibility = View.VISIBLE
                         }
-                        Log.d(
-                            TAG,
-                            "Loaded ${transactions.size} transactions for user $currentUserId"
-                        )
+                        Log.d(TAG, "Loaded ${transactions.size} transactions from Firebase for user $currentUserId")
                         transactionAdapter.updateList(transactions)
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading transactions", e)
-                Toast.makeText(
-                    this@DashboardActivity,
-                    "Error loading transactions: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Log.e(TAG, "Error loading transactions from Firebase: ${e.message}", e)
+                runOnUiThread {
+                    val errorMessage = when {
+                        e.message?.contains("network") == true ->
+                            "Network error loading transactions"
+                        else -> "Error loading transactions: ${e.message}"
+                    }
+
+                    Toast.makeText(this@DashboardActivity, errorMessage, Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -938,8 +897,7 @@ class DashboardActivity : AppCompatActivity() {
      * Handles bottom navigation bar.
      */
     private fun setupBottomNavigation() {
-        val bottomNavBar =
-            findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNavBar)
+        val bottomNavBar = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNavBar)
         bottomNavBar.selectedItemId = R.id.nav_dashboard
 
         bottomNavBar.setOnItemSelectedListener { item ->
@@ -1014,7 +972,6 @@ class DashboardActivity : AppCompatActivity() {
         // Hide badges button (Gamification feature not implemented yet)
         val allBadgesButton = root.findViewById<TextView>(R.id.allBadgesButton)
         allBadgesButton?.visibility = View.GONE
-
     }
 
     /**

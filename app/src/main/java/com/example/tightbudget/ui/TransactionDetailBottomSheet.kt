@@ -12,8 +12,8 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.tightbudget.R
-import com.example.tightbudget.data.AppDatabase
 import com.example.tightbudget.databinding.FragmentTransactionDetailBinding
+import com.example.tightbudget.firebase.FirebaseDataManager
 import com.example.tightbudget.models.Transaction
 import com.example.tightbudget.utils.DrawableUtils
 import com.example.tightbudget.utils.EmojiUtils
@@ -30,11 +30,13 @@ import java.util.Locale
 /**
  * A bottom sheet dialog that displays detailed information about a selected transaction.
  * This includes transaction details, receipt viewing, and delete functionality.
+ * Updated to use Firebase instead of Room database.
  */
 class TransactionDetailBottomSheet : BottomSheetDialogFragment() {
 
     private lateinit var binding: FragmentTransactionDetailBinding
     private lateinit var transaction: Transaction
+    private lateinit var firebaseDataManager: FirebaseDataManager
     private val TAG = "TransactionDetail"
 
     /**
@@ -62,6 +64,9 @@ class TransactionDetailBottomSheet : BottomSheetDialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize Firebase data manager
+        firebaseDataManager = FirebaseDataManager.getInstance()
 
         // Retrieve the transaction object passed in via arguments
         arguments?.let {
@@ -128,7 +133,7 @@ class TransactionDetailBottomSheet : BottomSheetDialogFragment() {
         // Delete button shows a confirmation dialog
         binding.deleteButton.setOnClickListener {
             ConfirmDeleteDialogFragment {
-                // When confirmed, delete the transaction
+                // When confirmed, delete the transaction using Firebase
                 deleteTransaction()
             }.show(parentFragmentManager, "ConfirmDeleteDialog")
         }
@@ -196,17 +201,15 @@ class TransactionDetailBottomSheet : BottomSheetDialogFragment() {
     }
 
     /**
-     * Deletes the current transaction from the database.
+     * Deletes the current transaction from Firebase database.
      */
     private fun deleteTransaction() {
         lifecycleScope.launch {
             try {
-                // Get the database and DAO
-                val db = AppDatabase.getDatabase(requireContext())
-                val transactionDao = db.transactionDao()
+                Log.d(TAG, "Deleting transaction ${transaction.id} from Firebase")
 
-                // Delete the transaction
-                transactionDao.deleteTransaction(transaction)
+                // Delete the transaction using Firebase
+                firebaseDataManager.deleteTransaction(transaction)
 
                 // Show success message and dismiss
                 withContext(Dispatchers.Main) {
@@ -217,15 +220,23 @@ class TransactionDetailBottomSheet : BottomSheetDialogFragment() {
                     ).show()
                     dismiss()
                 }
+
+                Log.d(TAG, "Transaction deleted successfully from Firebase")
+
             } catch (e: Exception) {
                 // Handle errors
+                Log.e(TAG, "Error deleting transaction from Firebase: ${e.message}", e)
+
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Error deleting transaction: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    Log.e(TAG, "Delete transaction error", e)
+                    val errorMessage = when {
+                        e.message?.contains("network") == true ->
+                            "Network error. Please check your connection and try again"
+                        e.message?.contains("permission") == true ->
+                            "Permission denied. Please check your Firebase configuration"
+                        else -> "Error deleting transaction: ${e.message}"
+                    }
+
+                    Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show()
                 }
             }
         }

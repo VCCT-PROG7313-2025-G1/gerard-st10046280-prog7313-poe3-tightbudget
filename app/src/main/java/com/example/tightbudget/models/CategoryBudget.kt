@@ -1,33 +1,16 @@
 package com.example.tightbudget.models
 
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
-import androidx.room.PrimaryKey
-
 /**
- * This data class represents a budget goal in the app.
- * It is used to store information about each user's budget goals, including the month, year,
- * total budget, and whether the goal is active.
- * The class is annotated with @Entity to indicate that it is a Room database entity.
+ * This data class represents a category budget in the app.
+ * It is used to store information about budget allocations for each category within a budget goal.
+ * Firebase-compatible version with no-argument constructor and proper defaults.
  */
-
-@Entity(
-    tableName = "category_budgets",
-    foreignKeys = [
-        ForeignKey(
-            entity = BudgetGoal::class,
-            parentColumns = ["id"],
-            childColumns = ["budgetGoalId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ],
-    indices = [Index("budgetGoalId")]
-)
 data class CategoryBudget(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val budgetGoalId: Int,   // Links to the budget goal
-    val categoryName: String,
-    val allocation: Double   // Amount allocated to this category
-)
+    val id: Int = 0,                // Unique identifier
+    val budgetGoalId: Int = 0,      // Reference to parent budget goal
+    val categoryName: String = "",   // Name of the category
+    val allocation: Double = 0.0     // Amount allocated to this category
+) {
+    // No-argument constructor required by Firebase
+    constructor() : this(0, 0, "", 0.0)
+}

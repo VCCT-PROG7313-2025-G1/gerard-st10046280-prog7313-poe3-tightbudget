@@ -8,7 +8,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.PopupMenu
-import androidx.appcompat.widget.SearchView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -18,8 +17,8 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.tightbudget.adapters.TransactionAdapter
-import com.example.tightbudget.data.AppDatabase
 import com.example.tightbudget.databinding.ActivityTransactionsBinding
+import com.example.tightbudget.firebase.FirebaseDataManager
 import com.example.tightbudget.models.Transaction
 import com.example.tightbudget.ui.TransactionDetailBottomSheet
 import com.example.tightbudget.utils.CategoryConstants
@@ -29,15 +28,18 @@ import java.util.*
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.SearchView
 
 /**
  * Activity that displays a scrollable list of all transactions (expenses and income).
  * It uses a RecyclerView with TransactionAdapter and supports filter controls.
+ * Updated to use Firebase instead of Room database.
  */
 class TransactionsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityTransactionsBinding
     private lateinit var transactionAdapter: TransactionAdapter
+    private lateinit var firebaseDataManager: FirebaseDataManager
     private val TAG = "TransactionsActivity"
 
     // Filter state variables
@@ -54,6 +56,9 @@ class TransactionsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityTransactionsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Initialize Firebase data manager
+        firebaseDataManager = FirebaseDataManager.getInstance()
 
         val header = findViewById<View>(R.id.header)
 
@@ -327,7 +332,6 @@ class TransactionsActivity : AppCompatActivity() {
     }
 
     private fun showDateRangePicker() {
-
         val startCalendar = Calendar.getInstance()
         val endCalendar = Calendar.getInstance()
 
@@ -458,7 +462,7 @@ class TransactionsActivity : AppCompatActivity() {
     }
 
     /**
-     * Loads transactions for the current logged-in user
+     * Loads transactions for the current logged-in user using Firebase
      */
     private fun loadUserTransactions() {
         val userId = getCurrentUserId()
@@ -468,7 +472,7 @@ class TransactionsActivity : AppCompatActivity() {
 
         if (userId == -1) {
             // User not logged in, show mock data
-            Log.d(TAG, "No user logged in, showing mock data")
+            Log.d(TAG, "No user logged in, showing sample data")
             val mockTransactions = generateMockTransactions()
             allTransactions = mockTransactions
             transactionAdapter.updateList(mockTransactions)
@@ -477,44 +481,67 @@ class TransactionsActivity : AppCompatActivity() {
             return
         }
 
-        // User is logged in, load their transactions
-        val db = AppDatabase.getDatabase(this)
-        val transactionDao = db.transactionDao()
-
+        // User is logged in, load their transactions from Firebase
         lifecycleScope.launch {
             try {
-                val transactions = transactionDao.getAllTransactionsForUser(userId)
+                Log.d(TAG, "Loading transactions from Firebase for user: $userId")
+
+                // Show loading state
+                runOnUiThread {
+                    binding.transactionsCount.text = "Loading from Firebase..."
+                }
+
+                // Get all transactions for the user from Firebase
+                val transactions = firebaseDataManager.getAllTransactionsForUser(userId)
+
+                Log.d(TAG, "Loaded ${transactions.size} transactions from Firebase")
 
                 runOnUiThread {
                     allTransactions = transactions
 
                     if (transactions.isEmpty()) {
                         // No transactions found
-                        Log.d(TAG, "No transactions found for user $userId")
+                        Log.d(TAG, "No transactions found in Firebase for user $userId")
                         binding.transactionsCount.text = "No transactions found"
+
+                        // Show empty state message
+                        Toast.makeText(
+                            this@TransactionsActivity,
+                            "No transactions found. Add some transactions to see them here!",
+                            Toast.LENGTH_LONG
+                        ).show()
                     } else {
-                        // Update adapter with real data
-                        Log.d(TAG, "Loaded ${transactions.size} transactions for user $userId")
+                        // Update adapter with real data from Firebase
+                        Log.d(TAG, "Displaying ${transactions.size} transactions from Firebase")
                         transactionAdapter.updateList(transactions)
                         updateTransactionSummary(transactions)
                         binding.transactionsCount.text = "${transactions.size} transactions"
+
+                        // Apply any filters that were set from intent
+                        if (intent.hasExtra("FILTER_CATEGORY")) {
+                            applyAllFilters()
+                        }
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading transactions", e)
+                Log.e(TAG, "Error loading transactions from Firebase: ${e.message}", e)
                 runOnUiThread {
-                    Toast.makeText(
-                        this@TransactionsActivity,
-                        "Error loading transactions",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    val errorMessage = when {
+                        e.message?.contains("network") == true ->
+                            "Network error. Please check your connection and try again"
+                        e.message?.contains("permission") == true ->
+                            "Permission denied. Please check your Firebase configuration"
+                        else -> "Error loading transactions: ${e.message}"
+                    }
+
+                    Toast.makeText(this@TransactionsActivity, errorMessage, Toast.LENGTH_LONG).show()
 
                     // Fall back to mock data
                     val mockTransactions = generateMockTransactions()
                     allTransactions = mockTransactions
                     transactionAdapter.updateList(mockTransactions)
                     updateTransactionSummary(mockTransactions)
-                    binding.transactionsCount.text = "${mockTransactions.size} transactions (sample)"
+                    binding.transactionsCount.text = "${mockTransactions.size} transactions (sample - Firebase error)"
                 }
             }
         }
@@ -531,27 +558,28 @@ class TransactionsActivity : AppCompatActivity() {
     }
 
     /**
-     * Generates sample transactions for testing UI
+     * Generates sample transactions for testing UI and non-logged in users
      */
     private fun generateMockTransactions(): List<Transaction> {
+        val calendar = Calendar.getInstance()
         return listOf(
             Transaction(
                 id = 1,
                 userId = -1,
-                merchant = "ABC Inc",
+                merchant = "ABC Company",
                 category = "Income",
                 amount = 30000.00,
-                date = Date(),
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -1) }.time,
                 isExpense = false,
                 description = "Monthly salary"
             ),
             Transaction(
                 id = 2,
                 userId = -1,
-                merchant = "CoCT",
+                merchant = "City of Cape Town",
                 category = "Utilities",
                 amount = 1100.00,
-                date = Date(),
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -2) }.time,
                 isExpense = true,
                 description = "Electricity and water"
             ),
@@ -561,9 +589,59 @@ class TransactionsActivity : AppCompatActivity() {
                 merchant = "UberEats",
                 category = "Food",
                 amount = 199.90,
-                date = Date(),
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -3) }.time,
                 isExpense = true,
                 description = "Dinner delivery"
+            ),
+            Transaction(
+                id = 4,
+                userId = -1,
+                merchant = "Checkers",
+                category = "Food",
+                amount = 485.50,
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -5) }.time,
+                isExpense = true,
+                description = "Weekly groceries"
+            ),
+            Transaction(
+                id = 5,
+                userId = -1,
+                merchant = "Shell",
+                category = "Transport",
+                amount = 650.00,
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -7) }.time,
+                isExpense = true,
+                description = "Fuel"
+            ),
+            Transaction(
+                id = 6,
+                userId = -1,
+                merchant = "Netflix",
+                category = "Entertainment",
+                amount = 159.00,
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -10) }.time,
+                isExpense = true,
+                description = "Monthly subscription"
+            ),
+            Transaction(
+                id = 7,
+                userId = -1,
+                merchant = "Vodacom",
+                category = "Utilities",
+                amount = 599.00,
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -12) }.time,
+                isExpense = true,
+                description = "Mobile plan"
+            ),
+            Transaction(
+                id = 8,
+                userId = -1,
+                merchant = "Mr Price",
+                category = "Shopping",
+                amount = 320.00,
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -15) }.time,
+                isExpense = true,
+                description = "Clothing"
             )
         )
     }
@@ -608,3 +686,4 @@ class TransactionsActivity : AppCompatActivity() {
         }
     }
 }
+
