@@ -1,19 +1,17 @@
 package com.example.tightbudget.models
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-
-/*
+/**
  * This data class represents a category in the app.
  * It is used to store information about each category, including its name, emoji, color, and budget.
- * The class is annotated with @Entity to indicate that it is a Room database entity.
+ * Firebase-compatible version with no-argument constructor and proper defaults.
  */
-@Entity(tableName = "categories")
 data class Category(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val name: String,
-    val emoji: String,
-    val color: String,
-    val budget: Double
-)
+    val id: Int = 0,                // Unique identifier
+    val name: String = "",          // Category name (e.g., "Food", "Transport")
+    val emoji: String = "",         // Category emoji (e.g., "🍔", "🚗")
+    val color: String = "",         // Category color (e.g., "#FF9800")
+    val budget: Double = 0.0        // Default budget for this category
+) {
+    // No-argument constructor required by Firebase
+    constructor() : this(0, "", "", "", 0.0)
+}

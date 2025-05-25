@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.tightbudget.adapters.CategorySpendingAdapter
-import com.example.tightbudget.data.AppDatabase
 import com.example.tightbudget.databinding.ActivityCategorySpendingBinding
 import com.example.tightbudget.firebase.FirebaseBudgetManager
 import com.example.tightbudget.firebase.FirebaseDataManager

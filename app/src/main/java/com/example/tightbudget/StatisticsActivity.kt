@@ -12,9 +12,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.example.tightbudget.data.AppDatabase
 import com.example.tightbudget.databinding.ActivityStatisticsBinding
+import com.example.tightbudget.firebase.FirebaseDataManager
+import com.example.tightbudget.firebase.FirebaseBudgetManager
 import com.example.tightbudget.models.Transaction
+import com.example.tightbudget.models.BudgetGoal
+import com.example.tightbudget.models.CategoryBudget
 import com.example.tightbudget.utils.ChartUtils
 import com.example.tightbudget.utils.DrawableUtils
 import com.example.tightbudget.utils.EmojiUtils
@@ -30,7 +33,8 @@ import kotlin.math.min
 class StatisticsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityStatisticsBinding
-    private lateinit var db: AppDatabase
+    private lateinit var firebaseDataManager: FirebaseDataManager
+    private lateinit var firebaseBudgetManager: FirebaseBudgetManager
     private var userId: Int = -1
 
     // List of period buttons to update styling dynamically
@@ -62,7 +66,9 @@ class StatisticsActivity : AppCompatActivity() {
         DrawableUtils.applyCircleBackground(mediumView, ContextCompat.getColor(this, R.color.orange))
         DrawableUtils.applyCircleBackground(lowView, ContextCompat.getColor(this, R.color.teal_light))
 
-        db = AppDatabase.getDatabase(this)
+        // Initialize Firebase managers
+        firebaseDataManager = FirebaseDataManager.getInstance()
+        firebaseBudgetManager = FirebaseBudgetManager.getInstance()
         userId = getCurrentUserId()
 
         setupBottomNavigation()
@@ -130,11 +136,12 @@ class StatisticsActivity : AppCompatActivity() {
     }
 
     /**
-     * Load statistics for the selected period
+     * Load statistics for the selected period using Firebase
      */
     private fun loadStatsForPeriod(period: String) {
         if (userId == -1) {
-            Toast.makeText(this, "Please log in to view statistics", Toast.LENGTH_SHORT).show()
+            // Show sample data for non-logged in users
+            loadSampleStatsForPeriod(period)
             return
         }
 
@@ -143,6 +150,8 @@ class StatisticsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
+                Log.d("StatisticsActivity", "Loading stats for period: $period using Firebase")
+
                 // Get date range for the selected period
                 val (startDate, endDate, periodTitle, previousPeriodTitle) = getDateRangeForPeriod(period)
 
@@ -161,43 +170,41 @@ class StatisticsActivity : AppCompatActivity() {
                 val daysPassed = daysTotal - daysRemaining
                 val daysRatio = daysPassed.toFloat() / daysTotal.toFloat()
 
-                // Get transactions for this period
-                val transactions = db.transactionDao()
-                    .getTransactionsForPeriod(userId, startDate, endDate)
+                // Get transactions for this period from Firebase
+                val transactions = firebaseDataManager.getTransactionsForPeriod(userId, startDate, endDate)
                     .filter { it.isExpense }
 
-                // Get active budget goal
-                val budgetGoalDao = db.budgetGoalDao()
+                Log.d("StatisticsActivity", "Loaded ${transactions.size} transactions from Firebase")
+
+                // Get active budget goal from Firebase
                 val monthYear = Calendar.getInstance().apply {
                     time = endDate
                 }
                 val currentMonth = monthYear.get(Calendar.MONTH) + 1 // 0-based to 1-based
                 val currentYear = monthYear.get(Calendar.YEAR)
 
-                val budgetGoal = budgetGoalDao.getBudgetGoalForMonth(userId, currentMonth, currentYear)
-                    ?: budgetGoalDao.getActiveBudgetGoal(userId)
+                val budgetGoal = firebaseBudgetManager.getBudgetGoalForMonth(userId, currentMonth, currentYear)
+                    ?: firebaseBudgetManager.getActiveBudgetGoal(userId)
 
                 budgetAmount = budgetGoal?.totalBudget ?: 0.0
 
                 // Calculate total spent
                 totalSpent = transactions.sumOf { it.amount }
 
-                // Get previous period transactions for comparison
+                // Get previous period transactions for comparison from Firebase
                 val (prevStartDate, prevEndDate) = getPreviousPeriodDates(period, startDate)
-                val previousTransactions = db.transactionDao()
-                    .getTransactionsForPeriod(userId, prevStartDate, prevEndDate)
+                val previousTransactions = firebaseDataManager.getTransactionsForPeriod(userId, prevStartDate, prevEndDate)
                     .filter { it.isExpense }
                 previousPeriodSpent = previousTransactions.sumOf { it.amount }
 
-                // Get category budgets
+                // Get category budgets from Firebase
                 val categoryBudgets = if (budgetGoal != null) {
-                    db.categoryBudgetDao().getCategoryBudgetsForGoal(budgetGoal.id)
+                    firebaseBudgetManager.getCategoryBudgetsForGoal(budgetGoal.id)
                 } else {
                     emptyList()
                 }
 
-                // Get all categories for styling
-                val allCategories = db.categoryDao().getAllCategories()
+                Log.d("StatisticsActivity", "Loaded ${categoryBudgets.size} category budgets from Firebase")
 
                 // Group transactions by category
                 val categorySpending = transactions
@@ -206,16 +213,11 @@ class StatisticsActivity : AppCompatActivity() {
 
                 // Create category data list for charts
                 categoryDataList = categorySpending.map { (categoryName, amount) ->
-                    // Find matching category for styling
-                    val category = allCategories.find { it.name == categoryName }
-                    val emoji = category?.emoji ?: EmojiUtils.getCategoryEmoji(categoryName)
-                    val color = category?.color?.let {
-                        try {
-                            Color.parseColor(if (it.startsWith("#")) it else "#$it")
-                        } catch (e: Exception) {
-                            DrawableUtils.getCategoryColor(this@StatisticsActivity, categoryName)
-                        }
-                    } ?: DrawableUtils.getCategoryColor(this@StatisticsActivity, categoryName)
+                    // Get emoji for category
+                    val emoji = EmojiUtils.getCategoryEmoji(categoryName)
+
+                    // Get color for category
+                    val color = getCategoryColor(categoryName)
 
                     // Find budget allocation
                     val budgetLimit = categoryBudgets
@@ -241,23 +243,153 @@ class StatisticsActivity : AppCompatActivity() {
                     totalSpent.toFloat()
                 }
 
-                // Update UI
+                // Update UI on main thread
                 withContext(Dispatchers.Main) {
                     updateStatisticsUI(displayTitle)
                     binding.loadingOverlay.visibility = View.GONE
                 }
 
             } catch (e: Exception) {
-                Log.e("StatisticsActivity", "Error loading statistics: ${e.message}", e)
+                Log.e("StatisticsActivity", "Error loading statistics from Firebase: ${e.message}", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@StatisticsActivity,
-                        "Error loading statistics: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    val errorMessage = when {
+                        e.message?.contains("network") == true ->
+                            "Network error. Please check your connection and try again"
+                        e.message?.contains("permission") == true ->
+                            "Permission denied. Please check your Firebase configuration"
+                        else -> "Error loading statistics: ${e.message}"
+                    }
+
+                    Toast.makeText(this@StatisticsActivity, errorMessage, Toast.LENGTH_LONG).show()
                     binding.loadingOverlay.visibility = View.GONE
+
+                    // Fall back to sample data
+                    loadSampleStatsForPeriod(period)
                 }
             }
+        }
+    }
+
+    /**
+     * Load sample statistics for non-logged in users or error fallback
+     */
+    private fun loadSampleStatsForPeriod(period: String) {
+        Log.d("StatisticsActivity", "Loading sample stats for period: $period")
+
+        // Show sample data
+        val sampleTransactions = generateSampleTransactions()
+        totalSpent = sampleTransactions.sumOf { it.amount }
+        budgetAmount = 5000.0
+        previousPeriodSpent = 1200.0
+        daysRemaining = 15
+
+        // Create sample category data
+        val categorySpending = sampleTransactions
+            .groupBy { it.category }
+            .mapValues { (_, txns) -> txns.sumOf { it.amount }.toFloat() }
+
+        categoryDataList = categorySpending.map { (categoryName, amount) ->
+            ChartUtils.CategorySpendingData(
+                name = categoryName,
+                amount = amount,
+                budgetLimit = amount * 1.2f, // 20% higher budget
+                color = getCategoryColor(categoryName),
+                emoji = EmojiUtils.getCategoryEmoji(categoryName)
+            )
+        }.sortedByDescending { it.amount }
+
+        // Sample daily spending data
+        dailySpendingData = mapOf(
+            "1 Jan" to 50f,
+            "2 Jan" to 80f,
+            "3 Jan" to 60f,
+            "4 Jan" to 90f,
+            "5 Jan" to 30f,
+            "6 Jan" to 100f,
+            "7 Jan" to 70f
+        )
+
+        forecastAmount = (totalSpent * 1.5).toFloat()
+
+        // Update UI
+        val displayTitle = "January 2025 (Sample Data)"
+        updateStatisticsUI(displayTitle)
+        binding.loadingOverlay.visibility = View.GONE
+    }
+
+    /**
+     * Generate sample transactions for non-logged in users
+     */
+    private fun generateSampleTransactions(): List<Transaction> {
+        val calendar = Calendar.getInstance()
+        return listOf(
+            Transaction(
+                id = 1,
+                userId = -1,
+                merchant = "Checkers",
+                category = "Food",
+                amount = 450.75,
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -2) }.time,
+                isExpense = true,
+                description = "Weekly grocery shopping"
+            ),
+            Transaction(
+                id = 2,
+                userId = -1,
+                merchant = "Engen",
+                category = "Transport",
+                amount = 350.50,
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -5) }.time,
+                isExpense = true,
+                description = "Fuel"
+            ),
+            Transaction(
+                id = 3,
+                userId = -1,
+                merchant = "Netflix",
+                category = "Entertainment",
+                amount = 159.00,
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -10) }.time,
+                isExpense = true,
+                description = "Monthly subscription"
+            ),
+            Transaction(
+                id = 4,
+                userId = -1,
+                merchant = "Vodacom",
+                category = "Utilities",
+                amount = 599.00,
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -8) }.time,
+                isExpense = true,
+                description = "Mobile plan"
+            ),
+            Transaction(
+                id = 5,
+                userId = -1,
+                merchant = "City of Cape Town",
+                category = "Housing",
+                amount = 1200.00,
+                date = calendar.apply { add(Calendar.DAY_OF_MONTH, -15) }.time,
+                isExpense = true,
+                description = "Municipal services"
+            )
+        )
+    }
+
+    /**
+     * Helper method to get category colors
+     */
+    private fun getCategoryColor(categoryName: String): Int {
+        return when (categoryName.lowercase()) {
+            "housing" -> Color.parseColor("#4CAF50")
+            "food", "groceries" -> Color.parseColor("#FF9800")
+            "transport" -> Color.parseColor("#2196F3")
+            "entertainment" -> Color.parseColor("#9C27B0")
+            "utilities" -> Color.parseColor("#FFC107")
+            "health" -> Color.parseColor("#E91E63")
+            "shopping" -> Color.parseColor("#00BCD4")
+            "education" -> Color.parseColor("#3F51B5")
+            else -> Color.parseColor("#9E9E9E")
         }
     }
 
@@ -578,8 +710,12 @@ class StatisticsActivity : AppCompatActivity() {
 
         // Launch a coroutine to handle the suspend functions
         lifecycleScope.launch {
-            // Get historical average if available
-            val historicalMonthlyAverage = getHistoricalAverage() ?: budgetAmount.toFloat()
+            // Get historical average if available (for logged-in users)
+            val historicalMonthlyAverage = if (userId != -1) {
+                getHistoricalAverage() ?: budgetAmount.toFloat()
+            } else {
+                budgetAmount.toFloat()
+            }
 
             // Calculate base projection with different methods based on days passed
             val projectedAmount = when {
@@ -676,7 +812,7 @@ class StatisticsActivity : AppCompatActivity() {
     }
 
     /**
-     * Get historical average monthly spending (from past 3 months)
+     * Get historical average monthly spending (from past 3 months) using Firebase
      * Returns null if no historical data is available
      */
     private suspend fun getHistoricalAverage(): Float? {
@@ -696,12 +832,12 @@ class StatisticsActivity : AppCompatActivity() {
                 pastMonths.add(Pair(calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.YEAR)))
             }
 
-            // Try to get total spending for each of the past 3 months
+            // Try to get total spending for each of the past 3 months using Firebase
             var totalPastSpending = 0.0
             var monthsWithData = 0
 
             pastMonths.forEach { (month, year) ->
-                val budgetGoal = db.budgetGoalDao().getBudgetGoalForMonth(userId, month, year)
+                val budgetGoal = firebaseBudgetManager.getBudgetGoalForMonth(userId, month, year)
 
                 if (budgetGoal != null) {
                     // Get start and end date for this month
@@ -711,9 +847,8 @@ class StatisticsActivity : AppCompatActivity() {
                     calendar.set(year, month - 1, calendar.getActualMaximum(Calendar.DAY_OF_MONTH), 23, 59, 59)
                     val endDate = calendar.time
 
-                    // Get transactions for this month
-                    val transactions = db.transactionDao()
-                        .getTransactionsForPeriod(userId, startDate, endDate)
+                    // Get transactions for this month from Firebase
+                    val transactions = firebaseDataManager.getTransactionsForPeriod(userId, startDate, endDate)
                         .filter { it.isExpense }
 
                     if (transactions.isNotEmpty()) {
@@ -730,7 +865,7 @@ class StatisticsActivity : AppCompatActivity() {
                 null
             }
         } catch (e: Exception) {
-            Log.e("StatisticsActivity", "Error calculating historical average: ${e.message}", e)
+            Log.e("StatisticsActivity", "Error calculating historical average from Firebase: ${e.message}", e)
             null
         }
     }
