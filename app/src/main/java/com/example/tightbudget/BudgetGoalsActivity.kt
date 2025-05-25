@@ -3,23 +3,19 @@ package com.example.tightbudget
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.widget.EditText
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.tightbudget.data.AppDatabase
 import com.example.tightbudget.databinding.ActivityBudgetGoalsBinding
-import com.example.tightbudget.databinding.ItemBudgetCategoryBinding
+import com.example.tightbudget.firebase.FirebaseBudgetManager
+import com.example.tightbudget.firebase.FirebaseDataManager
 import com.example.tightbudget.models.BudgetGoal
 import com.example.tightbudget.models.CategoryBudget
-import com.example.tightbudget.models.CategoryItem
 import com.example.tightbudget.ui.CategoryBudgetItem
-import com.example.tightbudget.ui.CategoryPickerBottomSheet
 import com.example.tightbudget.ui.CreateCategoryBottomSheet
-import com.example.tightbudget.utils.CategoryAllocationManager
 import com.example.tightbudget.utils.EmojiUtils
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -28,7 +24,7 @@ import java.util.Locale
 
 /**
  * BudgetGoalsActivity handles the screen where users set their total monthly budget
- * and allocate amounts to different spending categories.
+ * and allocate amounts to different spending categories using Firebase.
  */
 class BudgetGoalsActivity : AppCompatActivity() {
 
@@ -42,24 +38,26 @@ class BudgetGoalsActivity : AppCompatActivity() {
     private var existingBudgetGoalId = 0 // For updating existing goals
     private val TAG = "BudgetGoalsActivity"
     private var totalAllocated = 0.0
-    private lateinit var categoryManager: CategoryAllocationManager
+
+    // Firebase managers
+    private lateinit var firebaseDataManager: FirebaseDataManager
+    private lateinit var firebaseBudgetManager: FirebaseBudgetManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityBudgetGoalsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initilise the category manager
-        val db = AppDatabase.getDatabase(this)
-        categoryManager = CategoryAllocationManager(db)
+        // Initialize Firebase managers
+        firebaseDataManager = FirebaseDataManager.getInstance()
+        firebaseBudgetManager = FirebaseBudgetManager.getInstance()
 
         setupUI()
-        loadCurrentUserBudget() // Load the current user's budget goal from the database
+        loadCurrentUserBudget() // Load the current user's budget goal from Firebase
     }
 
     /**
      * Retrieve the current user ID from shared preferences.
-     * This is used to link the budget goal to the specific user.
      */
     private fun getCurrentUserId(): Int {
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
@@ -67,7 +65,7 @@ class BudgetGoalsActivity : AppCompatActivity() {
     }
 
     /**
-     * Load the current user's budget goal from the database.
+     * Load the current user's budget goal from Firebase.
      */
     private fun loadCurrentUserBudget() {
         val userId = getCurrentUserId()
@@ -78,22 +76,17 @@ class BudgetGoalsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val db = AppDatabase.getDatabase(this@BudgetGoalsActivity)
-                val budgetGoalDao = db.budgetGoalDao()
-                val categoryDao = db.categoryDao()
-
                 // Show loading indicator
                 runOnUiThread {
                     binding.loadingIndicator.visibility = android.view.View.VISIBLE
                 }
 
                 // Try to get budget for current month first
-                var budgetGoal =
-                    budgetGoalDao.getBudgetGoalForMonth(userId, currentMonth, currentYear)
+                var budgetGoal = firebaseBudgetManager.getBudgetGoalForMonth(userId, currentMonth, currentYear)
 
                 // If no budget for current month, get the most recent active budget
                 if (budgetGoal == null) {
-                    budgetGoal = budgetGoalDao.getActiveBudgetGoal(userId)
+                    budgetGoal = firebaseBudgetManager.getActiveBudgetGoal(userId)
                 }
 
                 if (budgetGoal != null) {
@@ -102,12 +95,21 @@ class BudgetGoalsActivity : AppCompatActivity() {
                     currentBudget = budgetGoal.totalBudget
                     minimumSpendingGoal = budgetGoal.minimumSpendingGoal
 
-                    // Load category allocations using the manager
-                    val loadedItems = categoryManager.loadCategoryAllocations(budgetGoal.id)
+                    // Load category allocations using Firebase
+                    val loadedCategoryBudgets = firebaseBudgetManager.getCategoryBudgetsForGoal(budgetGoal.id)
 
-                    // Update our list
+                    // Convert CategoryBudget to CategoryBudgetItem with emoji and color
                     categoryItems.clear()
-                    categoryItems.addAll(loadedItems)
+                    for (categoryBudget in loadedCategoryBudgets) {
+                        val categoryItem = CategoryBudgetItem(
+                            categoryName = categoryBudget.categoryName,
+                            emoji = EmojiUtils.getCategoryEmoji(categoryBudget.categoryName),
+                            color = getCategoryColor(categoryBudget.categoryName),
+                            allocation = categoryBudget.allocation,
+                            id = categoryBudget.id
+                        )
+                        categoryItems.add(categoryItem)
+                    }
 
                     // Calculate total allocated
                     totalAllocated = categoryItems.sumOf { it.allocation }
@@ -121,13 +123,7 @@ class BudgetGoalsActivity : AppCompatActivity() {
                     }
                 } else {
                     // No existing budget, create default categories and allocations
-                    val defaultItems = categoryManager.createDefaultAllocations(currentBudget)
-
-                    categoryItems.clear()
-                    categoryItems.addAll(defaultItems)
-
-                    // Calculate total allocated
-                    totalAllocated = categoryItems.sumOf { it.allocation }
+                    createDefaultAllocations()
 
                     // Update UI
                     runOnUiThread {
@@ -138,7 +134,7 @@ class BudgetGoalsActivity : AppCompatActivity() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading budget: ${e.message}", e)
+                Log.e(TAG, "Error loading budget from Firebase: ${e.message}", e)
                 runOnUiThread {
                     binding.loadingIndicator.visibility = android.view.View.GONE
                     Toast.makeText(
@@ -148,6 +144,76 @@ class BudgetGoalsActivity : AppCompatActivity() {
                     ).show()
                 }
             }
+        }
+    }
+
+    /**
+     * Helper method for category colors
+     */
+    private fun getCategoryColor(categoryName: String): String {
+        return when (categoryName.lowercase()) {
+            "housing" -> "#4CAF50"
+            "food", "groceries" -> "#FF9800"
+            "transport" -> "#2196F3"
+            "entertainment" -> "#9C27B0"
+            "utilities" -> "#FFC107"
+            "health" -> "#E91E63"
+            "shopping" -> "#00BCD4"
+            "education" -> "#3F51B5"
+            else -> "#9E9E9E"
+        }
+    }
+
+    /**
+     * Create default allocations for new users
+     */
+    private suspend fun createDefaultAllocations() {
+        try {
+            // Smart allocation algorithm for default categories
+            val essentialCategories = listOf("Housing", "Groceries", "Utilities", "Transport")
+            val essentialPercentage = 0.65 // 65% for essential categories
+
+            categoryItems.clear()
+            var remainingBudget = currentBudget
+
+            // First, allocate to essentials
+            val essentialBudget = currentBudget * essentialPercentage
+            remainingBudget -= essentialBudget
+
+            // Distribute essential budget among essential categories
+            val perEssentialCat = essentialBudget / essentialCategories.size
+
+            for (categoryName in essentialCategories) {
+                categoryItems.add(
+                    CategoryBudgetItem(
+                        categoryName = categoryName,
+                        emoji = EmojiUtils.getCategoryEmoji(categoryName),
+                        color = getCategoryColor(categoryName),
+                        allocation = perEssentialCat
+                    )
+                )
+            }
+
+            // Add some other common categories
+            val otherCategories = listOf("Entertainment", "Health", "Shopping", "Education")
+            val perOtherCat = remainingBudget / otherCategories.size
+
+            for (categoryName in otherCategories) {
+                categoryItems.add(
+                    CategoryBudgetItem(
+                        categoryName = categoryName,
+                        emoji = EmojiUtils.getCategoryEmoji(categoryName),
+                        color = getCategoryColor(categoryName),
+                        allocation = perOtherCat
+                    )
+                )
+            }
+
+            // Calculate total allocated
+            totalAllocated = categoryItems.sumOf { it.allocation }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating default allocations: ${e.message}", e)
         }
     }
 
@@ -163,6 +229,9 @@ class BudgetGoalsActivity : AppCompatActivity() {
         binding.monthText.text = monthFormatter.format(calendar.time)
     }
 
+    /**
+     * Update the category list UI
+     */
     private fun updateCategoryList() {
         binding.categoryContainer.removeAllViews()
 
@@ -239,7 +308,7 @@ class BudgetGoalsActivity : AppCompatActivity() {
                         recalculateTotalAllocated()
                     } catch (e: Exception) {
                         // Handle parsing errors
-                        Toast.makeText(this, "Please enter a valid amount", Toast.LENGTH_SHORT)
+                        Toast.makeText(this@BudgetGoalsActivity, "Please enter a valid amount", Toast.LENGTH_SHORT)
                             .show()
                         amountInput.setText(String.format("%.2f", item.allocation))
                     }
@@ -261,23 +330,22 @@ class BudgetGoalsActivity : AppCompatActivity() {
         updateTotalAllocated()
     }
 
-    /// Helper function to get average spending for a category (from transaction history)
+    /**
+     * Helper function to get average spending for a category from Firebase
+     */
     private suspend fun getCategoryAverage(categoryName: String): String {
         val userId = getCurrentUserId()
 
         try {
-            val db = AppDatabase.getDatabase(this)
-            val transactionDao = db.transactionDao()
-
-            // Get transactions for last 3 months
+            // Get transactions for last 3 months from Firebase
             val calendar = Calendar.getInstance()
             calendar.add(Calendar.MONTH, -3)
             val threeMonthsAgo = calendar.time
 
             val currentDate = Calendar.getInstance().time
 
-            // Get all transactions for the period
-            val transactions = transactionDao.getTransactionsForPeriod(userId, threeMonthsAgo, currentDate)
+            // Get all transactions for the period from Firebase
+            val transactions = firebaseDataManager.getTransactionsForPeriod(userId, threeMonthsAgo, currentDate)
 
             // Filter by category
             val categoryTransactions = transactions.filter { transaction ->
@@ -294,7 +362,7 @@ class BudgetGoalsActivity : AppCompatActivity() {
 
             return "R${"%,.2f".format(avgPerMonth)}"
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting category average: ${e.message}", e)
+            Log.e(TAG, "Error getting category average from Firebase: ${e.message}", e)
             return "R0.00"
         }
     }
@@ -342,17 +410,12 @@ class BudgetGoalsActivity : AppCompatActivity() {
             currentBudget += budgetIncrement
             updateDisplayedBudget()
 
-            // Proportionally adjust category allocations using the manager
+            // Proportionally adjust category allocations
             if (totalAllocated > 0) {
-                val adjustedItems = categoryManager.adjustAllocationsByRatio(
-                    categoryItems,
-                    oldBudget,
-                    currentBudget
-                )
-
-                categoryItems.clear()
-                categoryItems.addAll(adjustedItems)
-
+                val ratio = currentBudget / oldBudget
+                for (item in categoryItems) {
+                    item.allocation *= ratio
+                }
                 updateCategoryList()
             }
         }
@@ -366,15 +429,10 @@ class BudgetGoalsActivity : AppCompatActivity() {
 
                 // Proportionally adjust category allocations
                 if (totalAllocated > 0) {
-                    val adjustedItems = categoryManager.adjustAllocationsByRatio(
-                        categoryItems,
-                        oldBudget,
-                        currentBudget
-                    )
-
-                    categoryItems.clear()
-                    categoryItems.addAll(adjustedItems)
-
+                    val ratio = currentBudget / oldBudget
+                    for (item in categoryItems) {
+                        item.allocation *= ratio
+                    }
                     updateCategoryList()
                 }
             } else {
@@ -389,7 +447,7 @@ class BudgetGoalsActivity : AppCompatActivity() {
 
         // Add new category
         binding.addCategory.setOnClickListener {
-            showCategoryPicker()
+            showCreateCategoryDialog()
         }
 
         // Auto-balance allocations
@@ -500,104 +558,15 @@ class BudgetGoalsActivity : AppCompatActivity() {
     }
 
     /**
-     * Show a dialog to pick a category to add to the budget.
+     * Show create category dialog (simplified since we're not managing Room categories anymore)
      */
-    private fun showCategoryPicker() {
-        lifecycleScope.launch {
-            try {
-                val db = AppDatabase.getDatabase(this@BudgetGoalsActivity)
-                val categoryDao = db.categoryDao()
-
-                // Get all categories
-                val dbCategories = categoryDao.getAllCategories()
-
-                // Filter out categories already in our list
-                val existingCategoryNames = categoryItems.map { it.categoryName }
-                val availableCategories = dbCategories.filter {
-                    !existingCategoryNames.contains(it.name)
-                }
-
-                if (availableCategories.isEmpty()) {
-                    runOnUiThread {
-                        // Show create new category dialog directly
-                        val createCategorySheet = CreateCategoryBottomSheet()
-                        createCategorySheet.show(supportFragmentManager, "createCategorySheet")
-                    }
-                    return@launch
-                }
-
-                // Convert to CategoryItem for the picker
-                val categoryItems = availableCategories.map {
-                    CategoryItem(
-                        name = it.name,
-                        emoji = it.emoji,
-                        color = it.color,
-                        budget = it.budget
-                    )
-                }
-
-                runOnUiThread {
-                    // Show category picker
-                    val categoryPicker = CategoryPickerBottomSheet(
-                        categoryList = categoryItems,
-                        onCategorySelected = { selectedCategory ->
-                            // Add selected category to our budget allocations
-                            addCategoryToBudget(selectedCategory)
-                        },
-                        onCreateNewClicked = {
-                            // Show create new category dialog
-                            val createCategorySheet = CreateCategoryBottomSheet()
-                            createCategorySheet.show(supportFragmentManager, "createCategorySheet")
-                        }
-                    )
-
-                    categoryPicker.show(supportFragmentManager, "categoryPicker")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error showing category picker: ${e.message}", e)
-                runOnUiThread {
-                    Toast.makeText(
-                        this@BudgetGoalsActivity,
-                        "Error loading categories: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }
+    private fun showCreateCategoryDialog() {
+        val createCategorySheet = CreateCategoryBottomSheet()
+        createCategorySheet.show(supportFragmentManager, "createCategorySheet")
     }
 
     /**
-     * Add a selected category to the budget with an initial allocation.
-     */
-    private fun addCategoryToBudget(selectedCategory: CategoryItem) {
-        // Calculate a default allocation (remaining budget / number of existing categories)
-        val remainingBudget = currentBudget - totalAllocated
-        val defaultAllocation = if (remainingBudget > 0) remainingBudget else 0.0
-
-        // Create a new budget item
-        val newItem = CategoryBudgetItem(
-            categoryName = selectedCategory.name,
-            emoji = selectedCategory.emoji,
-            color = selectedCategory.color,
-            allocation = defaultAllocation
-        )
-
-        // Add to our list
-        categoryItems.add(newItem)
-
-        // Update UI
-        updateCategoryList()
-        recalculateTotalAllocated()
-
-        Toast.makeText(
-            this,
-            "${selectedCategory.name} added with R${"%,.2f".format(defaultAllocation)} allocation",
-            Toast.LENGTH_SHORT
-        ).show()
-    }
-
-    /**
-     * Copy the budget from the previous month.
+     * Copy the budget from the previous month using Firebase.
      */
     private fun copyPreviousMonth() {
         val userId = getCurrentUserId()
@@ -608,11 +577,8 @@ class BudgetGoalsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val db = AppDatabase.getDatabase(this@BudgetGoalsActivity)
-                val budgetGoalDao = db.budgetGoalDao()
-
-                // Get all budget goals
-                val allGoals = budgetGoalDao.getAllBudgetGoalsForUser(userId)
+                // Get all budget goals from Firebase
+                val allGoals = firebaseBudgetManager.getAllBudgetGoalsForUser(userId)
 
                 // Find a previous month (not current)
                 val previousGoal = allGoals.firstOrNull {
@@ -620,16 +586,26 @@ class BudgetGoalsActivity : AppCompatActivity() {
                 }
 
                 if (previousGoal != null) {
-                    // Load the previous goal's category budgets using the manager
-                    val previousCategoryBudgets = categoryManager.loadCategoryAllocations(previousGoal.id)
+                    // Load the previous goal's category budgets from Firebase
+                    val previousCategoryBudgets = firebaseBudgetManager.getCategoryBudgetsForGoal(previousGoal.id)
 
                     // Update our current data
                     currentBudget = previousGoal.totalBudget
                     minimumSpendingGoal = previousGoal.minimumSpendingGoal
 
-                    // Update category items
+                    // Convert to CategoryBudgetItem
                     categoryItems.clear()
-                    categoryItems.addAll(previousCategoryBudgets)
+                    for (categoryBudget in previousCategoryBudgets) {
+                        categoryItems.add(
+                            CategoryBudgetItem(
+                                categoryName = categoryBudget.categoryName,
+                                emoji = EmojiUtils.getCategoryEmoji(categoryBudget.categoryName),
+                                color = getCategoryColor(categoryBudget.categoryName),
+                                allocation = categoryBudget.allocation,
+                                id = 0 // Reset ID for new budget
+                            )
+                        )
+                    }
 
                     // Calculate total allocated
                     totalAllocated = categoryItems.sumOf { it.allocation }
@@ -655,7 +631,7 @@ class BudgetGoalsActivity : AppCompatActivity() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error copying previous budget: ${e.message}", e)
+                Log.e(TAG, "Error copying previous budget from Firebase: ${e.message}", e)
                 runOnUiThread {
                     Toast.makeText(
                         this@BudgetGoalsActivity,
@@ -668,7 +644,7 @@ class BudgetGoalsActivity : AppCompatActivity() {
     }
 
     /**
-     * Save the budget goal to the database.
+     * Save the budget goal to Firebase.
      */
     private fun saveBudgetGoal() {
         val userId = getCurrentUserId()
@@ -679,9 +655,6 @@ class BudgetGoalsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val db = AppDatabase.getDatabase(this@BudgetGoalsActivity)
-                val budgetGoalDao = db.budgetGoalDao()
-
                 // Show saving indicator
                 runOnUiThread {
                     binding.loadingIndicator.visibility = android.view.View.VISIBLE
@@ -689,7 +662,7 @@ class BudgetGoalsActivity : AppCompatActivity() {
                 }
 
                 // First, deactivate all existing budget goals for this user
-                budgetGoalDao.deactivateAllBudgetGoals(userId)
+                firebaseBudgetManager.deactivateAllBudgetGoals(userId)
 
                 // Create or update budget goal
                 val budgetGoal = BudgetGoal(
@@ -702,37 +675,39 @@ class BudgetGoalsActivity : AppCompatActivity() {
                     isActive = true
                 )
 
-                val budgetGoalId = if (existingBudgetGoalId > 0) {
-                    budgetGoalDao.updateBudgetGoal(budgetGoal)
-                    existingBudgetGoalId
+                val savedBudgetGoal = if (existingBudgetGoalId > 0) {
+                    firebaseBudgetManager.updateBudgetGoal(budgetGoal)
+                    budgetGoal
                 } else {
-                    budgetGoalDao.insertBudgetGoal(budgetGoal).toInt()
+                    firebaseBudgetManager.createBudgetGoal(budgetGoal)
                 }
 
-                // Save category budgets using the manager
-                val success = categoryManager.saveCategoryAllocations(budgetGoalId, categoryItems)
+                // Save category budgets to Firebase
+                firebaseBudgetManager.deleteCategoryBudgetsForGoal(savedBudgetGoal.id)
+
+                for (item in categoryItems) {
+                    val categoryBudget = CategoryBudget(
+                        id = 0, // Always insert new
+                        budgetGoalId = savedBudgetGoal.id,
+                        categoryName = item.categoryName,
+                        allocation = item.allocation
+                    )
+                    firebaseBudgetManager.createCategoryBudget(categoryBudget)
+                }
 
                 runOnUiThread {
                     binding.loadingIndicator.visibility = android.view.View.GONE
                     binding.saveChangesButton.isEnabled = true
 
-                    if (success) {
-                        Toast.makeText(
-                            this@BudgetGoalsActivity,
-                            "Budget goals saved successfully!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        existingBudgetGoalId = budgetGoalId // Update ID for future updates
-                    } else {
-                        Toast.makeText(
-                            this@BudgetGoalsActivity,
-                            "Error saving category allocations",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                    Toast.makeText(
+                        this@BudgetGoalsActivity,
+                        "Budget goals saved to Firebase successfully!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    existingBudgetGoalId = savedBudgetGoal.id // Update ID for future updates
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error saving budget goal: ${e.message}", e)
+                Log.e(TAG, "Error saving budget goal to Firebase: ${e.message}", e)
                 runOnUiThread {
                     binding.loadingIndicator.visibility = android.view.View.GONE
                     binding.saveChangesButton.isEnabled = true
