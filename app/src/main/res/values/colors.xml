@@ -13,6 +13,10 @@
     <color name="blue">#3A82F7</color>
     <color name="purple">#7E57C2</color>
     <color name="light_blue_bg">#E0F4FF</color>
+    <color name="gold">#FFD700</color>
+    <color name="purple_light">#9C27B0</color>
+    <color name="orange_light">#FF9800</color>
+    <color name="background_light">#F5F5F5</color>
 
     <!-- TightBudget colour scheme -->
     <color name="primary_purple_dark">#4A2BA6</color>

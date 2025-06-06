@@ -23,6 +23,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.tightbudget.databinding.ActivityAddTransactionBinding
 import com.example.tightbudget.firebase.FirebaseTransactionManager
+import com.example.tightbudget.firebase.GamificationManager
 import com.example.tightbudget.models.CategoryItem
 import com.example.tightbudget.models.Transaction
 import com.example.tightbudget.ui.CategoryPickerBottomSheet
@@ -569,7 +570,12 @@ class AddTransactionActivity : AppCompatActivity() {
                     val firebaseTransactionManager = FirebaseTransactionManager.getInstance()
                     val savedTransaction = firebaseTransactionManager.createTransaction(transaction)
 
+                    // Gamification logic for points earned
+                    val gamificationManager = GamificationManager.getInstance()
+                    val pointsEarned = gamificationManager.onTransactionAdded(userId, savedTransaction)
+
                     Log.d(TAG, "Transaction saved to Firebase with ID: ${savedTransaction.id}")
+                    Log.d(TAG, "Points earned from gamification: $pointsEarned")
                     Log.d(TAG, "Merchant/Source: $merchant")
                     Log.d(TAG, "Description: $description")
                     Log.d(TAG, "Category: $category")
@@ -590,10 +596,17 @@ class AddTransactionActivity : AppCompatActivity() {
                         binding.saveTransactionButton.isEnabled = true
                         binding.saveTransactionButton.text = "SAVE TRANSACTION"
 
+                        // Show success message with points if earned
+                        val message = if (pointsEarned > 0) {
+                            "Transaction saved! 🎉\n+$pointsEarned points earned!"
+                        } else {
+                            "Transaction saved to Firebase successfully!"
+                        }
+
                         Toast.makeText(
                             this@AddTransactionActivity,
-                            "Transaction saved to Firebase successfully!",
-                            Toast.LENGTH_SHORT
+                            message,
+                            Toast.LENGTH_LONG  // Changed to LONG to show points message longer
                         ).show()
 
                         // Return to Dashboard
