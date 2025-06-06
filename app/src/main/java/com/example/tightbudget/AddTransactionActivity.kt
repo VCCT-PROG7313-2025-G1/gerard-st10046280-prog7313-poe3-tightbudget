@@ -638,13 +638,85 @@ class AddTransactionActivity : AppCompatActivity() {
     }
 
     /**
-     * Opens a modal to create a new category
+     * Opens a modal to show available categories from Firebase
      */
     private fun showCategoryPicker() {
-        // For POE purposes, we'll use predefined categories from CategoryConstants
-        // This simplifies the demo while maintaining full UI functionality
+        lifecycleScope.launch {
+            try {
+                Log.d("AddTransactionActivity", "Loading categories from Firebase")
 
-        val predefinedCategories = listOf(
+                // Get categories from Firebase
+                val firebaseCategoryManager = com.example.tightbudget.firebase.FirebaseCategoryManager.getInstance()
+                val firebaseCategories = firebaseCategoryManager.getAllCategories()
+
+                // Convert to CategoryItems
+                val categoryItems = if (firebaseCategories.isNotEmpty()) {
+                    // Use Firebase categories
+                    firebaseCategories.map { category ->
+                        CategoryItem(
+                            name = category.name,
+                            emoji = category.emoji,
+                            color = category.color,
+                            budget = category.budget
+                        )
+                    }
+                } else {
+                    // Fallback to predefined categories if Firebase is empty
+                    Log.d("AddTransactionActivity", "No Firebase categories found, using predefined categories")
+                    getPredefinedCategories()
+                }
+
+                runOnUiThread {
+                    Log.d("AddTransactionActivity", "Showing category picker with ${categoryItems.size} categories")
+
+                    val picker = CategoryPickerBottomSheet(
+                        categoryList = categoryItems,
+                        onCategorySelected = { selectedCategoryItem ->
+                            selectedCategory = selectedCategoryItem
+                            updateSelectedCategoryDisplay()
+                            Log.d("AddTransactionActivity", "Selected category: ${selectedCategoryItem.name}")
+                        },
+                        onCreateNewClicked = {
+                            showCreateCategoryModal()
+                        }
+                    )
+
+                    if (!isFinishing) {
+                        picker.show(supportFragmentManager, "CategoryPicker")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("AddTransactionActivity", "Error loading categories from Firebase: ${e.message}", e)
+                runOnUiThread {
+                    // Fallback to predefined categories on error
+                    val predefinedCategories = getPredefinedCategories()
+
+                    val picker = CategoryPickerBottomSheet(
+                        categoryList = predefinedCategories,
+                        onCategorySelected = { selectedCategoryItem ->
+                            selectedCategory = selectedCategoryItem
+                            updateSelectedCategoryDisplay()
+                        },
+                        onCreateNewClicked = {
+                            showCreateCategoryModal()
+                        }
+                    )
+
+                    if (!isFinishing) {
+                        picker.show(supportFragmentManager, "CategoryPicker")
+                    }
+
+                    Toast.makeText(this@AddTransactionActivity, "Using default categories (Firebase error)", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    /**
+     * Get predefined categories as fallback
+     */
+    private fun getPredefinedCategories(): List<CategoryItem> {
+        return listOf(
             CategoryItem(
                 name = "Food",
                 emoji = EmojiUtils.getCategoryEmoji("Food"),
@@ -694,29 +766,6 @@ class AddTransactionActivity : AppCompatActivity() {
                 budget = 2000.0
             )
         )
-
-        try {
-            Log.d("AddTransactionActivity", "Showing category picker with ${predefinedCategories.size} predefined categories")
-
-            val picker = CategoryPickerBottomSheet(
-                categoryList = predefinedCategories,
-                onCategorySelected = { selectedCategoryItem ->
-                    selectedCategory = selectedCategoryItem
-                    updateSelectedCategoryDisplay()
-                    Log.d("AddTransactionActivity", "Selected category: ${selectedCategoryItem.name}")
-                },
-                onCreateNewClicked = {
-                    showCreateCategoryModal()
-                }
-            )
-
-            if (!isFinishing) {
-                picker.show(supportFragmentManager, "CategoryPicker")
-            }
-        } catch (e: Exception) {
-            Log.e("AddTransactionActivity", "Error showing category picker: ${e.message}", e)
-            Toast.makeText(this, "Error showing categories", Toast.LENGTH_SHORT).show()
-        }
     }
 
     private fun showCreateCategoryModal() {
