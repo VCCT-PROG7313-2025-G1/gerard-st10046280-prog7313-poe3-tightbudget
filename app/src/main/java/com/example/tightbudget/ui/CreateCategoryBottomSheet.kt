@@ -97,32 +97,66 @@ class CreateCategoryBottomSheet : BottomSheetDialogFragment() {
                 return@setOnClickListener
             }
 
-            // For POE purposes, we'll simulate category creation success
-            // In a full implementation, this would save to Firebase
+            // Save the category to Firebase
             lifecycleScope.launch {
                 try {
-                    // Simulate category creation delay
-                    kotlinx.coroutines.delay(500)
+                    // Show saving state
+                    binding.saveCategoryButton.isEnabled = false
+                    binding.saveCategoryButton.text = "Saving..."
 
-                    // For POE demonstration, categories are managed through CategoryConstants
-                    // This provides a realistic UI flow without complex Firebase category management
+                    // Check if category already exists
+                    val firebaseCategoryManager = com.example.tightbudget.firebase.FirebaseCategoryManager.getInstance()
 
-                    Log.d("CreateCategorySheet", "Category '$name' created successfully (POE simulation)")
+                    if (firebaseCategoryManager.categoryExists(name)) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Category '$name' already exists!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@launch
+                    }
+
+                    // Create new category
+                    val newCategory = com.example.tightbudget.models.Category(
+                        name = name,
+                        emoji = selectedEmoji,
+                        color = selectedColor,
+                        budget = budgetAmount
+                    )
+
+                    // Save to Firebase
+                    val savedCategory = firebaseCategoryManager.createCategory(newCategory)
+
+                    Log.d("CreateCategorySheet", "Category '$name' created successfully in Firebase with ID: ${savedCategory.id}")
 
                     Toast.makeText(
                         requireContext(),
-                        "Category '$name' created successfully!\nNote: For POE demo, categories are pre-configured.",
-                        Toast.LENGTH_LONG
+                        "Category '$name' created successfully!",
+                        Toast.LENGTH_SHORT
                     ).show()
 
                     dismiss()
+
                 } catch (e: Exception) {
-                    Log.e("CreateCategorySheet", "Error creating category: ${e.message}", e)
+                    Log.e("CreateCategorySheet", "Error creating category in Firebase: ${e.message}", e)
+
+                    val errorMessage = when {
+                        e.message?.contains("network") == true ->
+                            "Network error. Please check your connection and try again"
+                        e.message?.contains("already exists") == true ->
+                            "Category '$name' already exists"
+                        else -> "Error creating category: ${e.message}"
+                    }
+
                     Toast.makeText(
                         requireContext(),
-                        "Error creating category: ${e.message}",
-                        Toast.LENGTH_SHORT
+                        errorMessage,
+                        Toast.LENGTH_LONG
                     ).show()
+                } finally {
+                    // Reset button state
+                    binding.saveCategoryButton.isEnabled = true
+                    binding.saveCategoryButton.text = "SAVE CATEGORY"
                 }
             }
         }
