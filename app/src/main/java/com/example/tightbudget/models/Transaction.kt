@@ -15,16 +15,16 @@ import java.util.*
  */
 @Parcelize
 data class Transaction(
-    val id: Int = 0,
-    val userId: Int = 0,           // Foreign key to link to user
-    val merchant: String = "",      // Who you paid or were paid by
-    val category: String = "",      // Category like 'Food', 'Salary', etc.
-    val amount: Double = 0.0,        // How much was spent or earned
-    val dateTimestamp: Long = System.currentTimeMillis(), // Timestamp for Firebase compatibility
-    val isExpense: Boolean = true,    // True = expense, False = income
-    val description: String? = null,
-    val receiptPath: String? = null,
-    val isRecurring: Boolean = false
+    var id: Int = 0,
+    var userId: Int = 0,           // Foreign key to link to user
+    var merchant: String = "",      // Who you paid or were paid by
+    var category: String = "",      // Category like 'Food', 'Salary', etc.
+    var amount: Double = 0.0,        // How much was spent or earned
+    var dateTimestamp: Long = System.currentTimeMillis(), // Timestamp for Firebase compatibility
+    var isExpense: Boolean = true,    // True = expense, False = income
+    var description: String? = null,
+    var receiptPath: String? = null,
+    var isRecurring: Boolean = false
 ) : Parcelable {
 
     // No-argument constructor required by Firebase
