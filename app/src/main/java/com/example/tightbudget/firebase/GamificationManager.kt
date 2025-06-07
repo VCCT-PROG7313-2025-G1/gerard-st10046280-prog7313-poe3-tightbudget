@@ -42,6 +42,8 @@ class GamificationManager {
      */
     suspend fun awardPoints(userId: Int, points: Int, reason: String): Boolean {
         return try {
+            Log.d(TAG, "Awarding $points points to user $userId for: $reason")
+
             val userProgress = getUserProgress(userId)
             val newPoints = userProgress.totalPoints + points
             val newLevel = calculateLevel(newPoints)
@@ -52,14 +54,21 @@ class GamificationManager {
             )
 
             saveUserProgress(userId, updatedProgress)
-            Log.d(TAG, "Awarded $points points to user $userId for: $reason")
+            Log.d(TAG, "Points awarded successfully. New total: $newPoints")
 
-            // Check for new achievements
-            checkAndUnlockAchievements(userId, updatedProgress)
+            // Only check for achievements if this isn't already an achievement reward
+            if (!reason.contains("Unlocked achievement")) {
+                Log.d(TAG, "Checking for new achievements after point award...")
+                // Get the LATEST user progress after all updates
+                val latestProgress = getUserProgress(userId)
+                checkAndUnlockAchievements(userId, latestProgress)
+            } else {
+                Log.d(TAG, "Skipping achievement check - this was an achievement reward")
+            }
 
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Error awarding points: ${e.message}", e)
+            Log.e(TAG, "❌ Error awarding points: ${e.message}", e)
             false
         }
     }
@@ -71,29 +80,41 @@ class GamificationManager {
         var totalPointsEarned = 0
 
         try {
+            Log.d(TAG, "=== TRANSACTION GAMIFICATION START ===")
+            Log.d(TAG, "Processing transaction for user $userId")
+
+            // Get FRESH user progress
             val userProgress = getUserProgress(userId)
+            Log.d(TAG, "Current user progress: $userProgress")
+
+            // Update transaction count FIRST (before awarding points)
+            val hasReceipt = !transaction.receiptPath.isNullOrEmpty()
+            val updatedProgress = userProgress.copy(
+                transactionCount = userProgress.transactionCount + 1,
+                receiptsUploaded = if (hasReceipt) userProgress.receiptsUploaded + 1 else userProgress.receiptsUploaded
+            )
+
+            // Save updated progress immediately
+            saveUserProgress(userId, updatedProgress)
+            Log.d(TAG, "Updated progress saved: transactionCount=${updatedProgress.transactionCount}, receiptsUploaded=${updatedProgress.receiptsUploaded}")
 
             // Base points for adding transaction
-            awardPoints(userId, PointsSystem.ADD_TRANSACTION, "Added transaction")
-            totalPointsEarned += PointsSystem.ADD_TRANSACTION
+            val basePoints = PointsSystem.ADD_TRANSACTION
+            awardPoints(userId, basePoints, "Added transaction")
+            totalPointsEarned += basePoints
 
             // Bonus points for receipt
-            if (!transaction.receiptPath.isNullOrEmpty()) {
-                awardPoints(userId, PointsSystem.ADD_RECEIPT, "Added receipt")
-                totalPointsEarned += PointsSystem.ADD_RECEIPT
-
-                // Update receipts count
-                val updatedProgress = userProgress.copy(
-                    receiptsUploaded = userProgress.receiptsUploaded + 1,
-                    transactionCount = userProgress.transactionCount + 1
-                )
-                saveUserProgress(userId, updatedProgress)
+            if (hasReceipt) {
+                val receiptPoints = PointsSystem.ADD_RECEIPT
+                awardPoints(userId, receiptPoints, "Added receipt")
+                totalPointsEarned += receiptPoints
             }
 
             // Check if it's first transaction of the day
             if (isFirstTransactionToday(userId)) {
-                awardPoints(userId, PointsSystem.FIRST_TRANSACTION_OF_DAY, "First transaction today")
-                totalPointsEarned += PointsSystem.FIRST_TRANSACTION_OF_DAY
+                val bonusPoints = PointsSystem.FIRST_TRANSACTION_OF_DAY
+                awardPoints(userId, bonusPoints, "First transaction today")
+                totalPointsEarned += bonusPoints
             }
 
             // Update daily challenges progress
@@ -102,8 +123,11 @@ class GamificationManager {
             // Update streak
             updateStreak(userId)
 
+            Log.d(TAG, "=== TRANSACTION GAMIFICATION END ===")
+            Log.d(TAG, "Total points earned: $totalPointsEarned")
+
         } catch (e: Exception) {
-            Log.e(TAG, "Error processing transaction gamification: ${e.message}", e)
+            Log.e(TAG, "❌ Error processing transaction gamification: ${e.message}", e)
         }
 
         return totalPointsEarned
@@ -232,19 +256,76 @@ class GamificationManager {
      * Check and unlock achievements
      */
     private suspend fun checkAndUnlockAchievements(userId: Int, userProgress: UserProgress) {
-        val achievements = getAllAchievements()
+        try {
+            val allAchievements = getAllAchievements()
+            val unlockedAchievementIds = userProgress.achievementsUnlocked
 
-        achievements.forEach { achievement ->
-            if (!achievement.isUnlocked && meetsAchievementCriteria(userProgress, achievement)) {
-                val unlockedAchievement = achievement.copy(
-                    isUnlocked = true,
-                    unlockedDate = System.currentTimeMillis()
-                )
-                saveAchievement(userId, unlockedAchievement)
+            Log.d(TAG, "=== ACHIEVEMENT CHECK START ===")
+            Log.d(TAG, "User $userId current stats:")
+            Log.d(TAG, "- Total Points: ${userProgress.totalPoints}")
+            Log.d(TAG, "- Transaction Count: ${userProgress.transactionCount}")
+            Log.d(TAG, "- Receipts Uploaded: ${userProgress.receiptsUploaded}")
+            Log.d(TAG, "- Longest Streak: ${userProgress.longestStreak}")
+            Log.d(TAG, "- Already unlocked: $unlockedAchievementIds")
 
-                // Award bonus points for achievement
-                awardPoints(userId, achievement.pointsRequired, "Unlocked achievement: ${achievement.title}")
+            allAchievements.forEach { achievement ->
+                Log.d(TAG, "Checking achievement: ${achievement.id} (${achievement.title})")
+                Log.d(TAG, "- Type: ${achievement.type}, Target: ${achievement.targetValue}")
+                Log.d(TAG, "- Already unlocked: ${unlockedAchievementIds.contains(achievement.id)}")
+                Log.d(TAG, "- Meets criteria: ${meetsAchievementCriteria(userProgress, achievement)}")
+
+                // Only check achievements that haven't been unlocked yet
+                if (!unlockedAchievementIds.contains(achievement.id) &&
+                    meetsAchievementCriteria(userProgress, achievement)) {
+
+                    Log.d(TAG, "🏆 UNLOCKING achievement: ${achievement.title} for user $userId")
+
+                    // Mark achievement as unlocked in user progress
+                    val updatedAchievementsList = unlockedAchievementIds.toMutableList()
+                    updatedAchievementsList.add(achievement.id)
+
+                    val updatedUserProgress = userProgress.copy(
+                        achievementsUnlocked = updatedAchievementsList
+                    )
+
+                    // Save updated user progress first
+                    saveUserProgress(userId, updatedUserProgress)
+
+                    // Award bonus points for achievement (but don't recursively check achievements)
+                    awardPointsDirectly(userId, achievement.pointsRequired, "Unlocked achievement: ${achievement.title}")
+
+                    Log.d(TAG, "✅ Achievement ${achievement.title} unlocked successfully for user $userId")
+                } else {
+                    Log.d(TAG, "⏭️ Skipping achievement ${achievement.title} - already unlocked or criteria not met")
+                }
             }
+            Log.d(TAG, "=== ACHIEVEMENT CHECK END ===")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error checking achievements: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Award points directly without triggering achievement checks (prevents infinite loop)
+     */
+    private suspend fun awardPointsDirectly(userId: Int, points: Int, reason: String): Boolean {
+        return try {
+            val userProgress = getUserProgress(userId)
+            val newPoints = userProgress.totalPoints + points
+            val newLevel = calculateLevel(newPoints)
+
+            val updatedProgress = userProgress.copy(
+                totalPoints = newPoints,
+                currentLevel = newLevel
+            )
+
+            saveUserProgress(userId, updatedProgress)
+            Log.d(TAG, "Awarded $points points to user $userId for: $reason")
+
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Error awarding points directly: ${e.message}", e)
+            false
         }
     }
 
@@ -252,14 +333,38 @@ class GamificationManager {
      * Check if user meets achievement criteria
      */
     private fun meetsAchievementCriteria(userProgress: UserProgress, achievement: Achievement): Boolean {
-        return when (achievement.type) {
-            AchievementType.POINTS -> userProgress.totalPoints >= achievement.targetValue
-            AchievementType.STREAK -> userProgress.longestStreak >= achievement.targetValue
-            AchievementType.TRANSACTIONS -> userProgress.transactionCount >= achievement.targetValue
-            AchievementType.BUDGET_GOALS -> userProgress.budgetGoalsMet >= achievement.targetValue
-            AchievementType.RECEIPTS -> userProgress.receiptsUploaded >= achievement.targetValue
-            else -> false
+        val meets = when (achievement.type) {
+            AchievementType.POINTS -> {
+                val meets = userProgress.totalPoints >= achievement.targetValue
+                Log.d(TAG, "Points check: ${userProgress.totalPoints} >= ${achievement.targetValue} = $meets")
+                meets
+            }
+            AchievementType.STREAK -> {
+                val meets = userProgress.longestStreak >= achievement.targetValue
+                Log.d(TAG, "Streak check: ${userProgress.longestStreak} >= ${achievement.targetValue} = $meets")
+                meets
+            }
+            AchievementType.TRANSACTIONS -> {
+                val meets = userProgress.transactionCount >= achievement.targetValue
+                Log.d(TAG, "Transaction check: ${userProgress.transactionCount} >= ${achievement.targetValue} = $meets")
+                meets
+            }
+            AchievementType.BUDGET_GOALS -> {
+                val meets = userProgress.budgetGoalsMet >= achievement.targetValue
+                Log.d(TAG, "Budget goals check: ${userProgress.budgetGoalsMet} >= ${achievement.targetValue} = $meets")
+                meets
+            }
+            AchievementType.RECEIPTS -> {
+                val meets = userProgress.receiptsUploaded >= achievement.targetValue
+                Log.d(TAG, "Receipts check: ${userProgress.receiptsUploaded} >= ${achievement.targetValue} = $meets")
+                meets
+            }
+            else -> {
+                Log.d(TAG, "Unknown achievement type: ${achievement.type}")
+                false
+            }
         }
+        return meets
     }
 
     // Helper methods for Firebase operations
@@ -302,13 +407,45 @@ class GamificationManager {
         achievementsRef.child(userId.toString()).child(achievement.id).setValue(achievement).await()
     }
 
-      fun getAllAchievements(): List<Achievement> {
-        // Return predefined achievements
+    fun getAllAchievements(): List<Achievement> {
+        // Return predefined achievements with consistent IDs
         return listOf(
-            Achievement("first_transaction", "First Steps", "Add your first transaction", "🎯", 50, AchievementType.TRANSACTIONS, 1),
-            Achievement("streak_7", "Week Warrior", "Log transactions for 7 days straight", "🔥", 200, AchievementType.STREAK, 7),
-            Achievement("points_1000", "Point Master", "Earn 1000 total points", "⭐", 1000, AchievementType.POINTS, 1000),
-            Achievement("receipts_10", "Receipt Collector", "Upload 10 receipts", "📄", 150, AchievementType.RECEIPTS, 10)
+            Achievement(
+                id = "first_transaction",
+                title = "First Steps",
+                description = "Add your first transaction",
+                emoji = "🎯",
+                pointsRequired = 50,
+                type = AchievementType.TRANSACTIONS,
+                targetValue = 1
+            ),
+            Achievement(
+                id = "streak_7",
+                title = "Week Warrior",
+                description = "Log transactions for 7 days straight",
+                emoji = "🔥",
+                pointsRequired = 200,
+                type = AchievementType.STREAK,
+                targetValue = 7
+            ),
+            Achievement(
+                id = "points_500",
+                title = "Point Collector",
+                description = "Earn 500 total points",
+                emoji = "⭐",
+                pointsRequired = 100,
+                type = AchievementType.POINTS,
+                targetValue = 500
+            ),
+            Achievement(
+                id = "receipts_10",
+                title = "Receipt Pro",
+                description = "Upload 10 receipts",
+                emoji = "📄",
+                pointsRequired = 150,
+                type = AchievementType.RECEIPTS,
+                targetValue = 10
+            )
         )
     }
 
