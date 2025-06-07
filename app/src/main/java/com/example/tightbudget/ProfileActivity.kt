@@ -395,7 +395,8 @@ class ProfileActivity : AppCompatActivity() {
             if (userId == -1) {
                 Toast.makeText(this, "Please log in to view challenges", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "Daily Challenges feature coming soon!", Toast.LENGTH_SHORT).show()
+                // Navigate to DailyChallengesActivity
+                startActivity(Intent(this, DailyChallengesActivity::class.java))
             }
         }
     }

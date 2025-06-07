@@ -1,98 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:strokeWidth="0dp"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="20dp"
+        android:gravity="center_vertical">
 
-        <!-- Challenge Icon -->
-        <TextView
-            android:id="@+id/challengeIcon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/circle_background"
-            android:gravity="center"
-            android:text="📝"
-            android:textSize="24sp" />
+        <!-- Challenge Icon Container -->
+        <FrameLayout
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginEnd="16dp">
 
-        <!-- Challenge Details -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="12dp"
-            android:orientation="vertical">
+            <!-- Icon Background Circle -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                app:cardCornerRadius="32dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/teal_light">
 
-            <TextView
-                android:id="@+id/challengeTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Challenge Title"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_dark" />
+                <TextView
+                    android:id="@+id/challengeIcon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="📝"
+                    android:textSize="28sp"
+                    tools:text="📝" />
 
-            <TextView
-                android:id="@+id/challengeDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Challenge description here"
-                android:textSize="14sp"
-                android:textColor="@color/text_medium"
-                android:layout_marginTop="4dp" />
+            </androidx.cardview.widget.CardView>
 
-            <ProgressBar
-                android:id="@+id/challengeProgress"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_marginTop="8dp"
-                android:progress="50" />
-
-            <TextView
-                android:id="@+id/challengeTimeLeft"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="5h 30m left"
-                android:textSize="12sp"
-                android:textColor="@color/text_light"
-                android:layout_marginTop="4dp" />
-
-        </LinearLayout>
-
-        <!-- Challenge Status and Points -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center">
-
+            <!-- Status Overlay -->
             <ImageView
                 android:id="@+id/challengeStatus"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
+                android:layout_gravity="bottom|end"
                 android:src="@drawable/ic_clock"
-                android:layout_marginBottom="4dp" />
+                android:background="@drawable/circle_background_white"
+                android:padding="4dp"
+                android:elevation="2dp"
+                tools:src="@drawable/ic_check_circle" />
 
-            <TextView
-                android:id="@+id/challengePoints"
-                android:layout_width="wrap_content"
+        </FrameLayout>
+
+        <!-- Challenge Content -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- Title and Points Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="+50 pts"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="@color/teal_light" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:id="@+id/challengeTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Transaction Logger"
+                    android:textColor="@color/text_dark"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:text="Transaction Logger" />
+
+                <TextView
+                    android:id="@+id/challengePoints"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+75 pts"
+                    android:textColor="@color/teal_light"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/points_badge_enhanced"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    tools:text="+75 pts" />
+
+            </LinearLayout>
+
+            <!-- Description -->
+            <TextView
+                android:id="@+id/challengeDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Add 3 transactions today"
+                android:textColor="@color/text_medium"
+                android:textSize="14sp"
+                android:layout_marginBottom="12dp"
+                tools:text="Add 3 transactions today" />
+
+            <!-- Progress Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Progress Bar -->
+                <ProgressBar
+                    android:id="@+id/challengeProgress"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:max="100"
+                    android:progress="66"
+                    android:progressTint="@color/teal_light"
+                    android:progressBackgroundTint="@color/gray_light"
+                    android:background="@drawable/progress_bar_background"
+                    tools:progress="66" />
+
+                <!-- Progress Text and Time Left -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/challengeProgressText"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="2/3 completed"
+                        android:textColor="@color/text_medium"
+                        android:textSize="12sp"
+                        tools:text="2/3 completed" />
+
+                    <TextView
+                        android:id="@+id/challengeTimeLeft"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="8h left"
+                        android:textColor="@android:color/white"
+                        android:textSize="12sp"
+                        android:background="@drawable/time_badge_background"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
+                        tools:text="8h left" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
         </LinearLayout>
 
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+    <!-- Completion Overlay -->
+    <View
+        android:id="@+id/completionOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/completion_overlay"
+        android:visibility="gone" />
+
+</com.google.android.material.card.MaterialCardView>
