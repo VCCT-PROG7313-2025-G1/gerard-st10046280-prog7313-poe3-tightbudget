@@ -974,6 +974,22 @@ class DashboardActivity : AppCompatActivity() {
         val challengesCard = root.findViewById<View>(R.id.cardChallenges)
         challengesCard?.visibility = View.VISIBLE
 
+        // View all badges button
+        root.findViewById<TextView>(R.id.allBadgesButton)?.setOnClickListener {
+            startActivity(Intent(this, AchievementsActivity::class.java))
+        }
+
+        // View All Challenges button
+        root.findViewById<TextView>(R.id.viewAllChallengesButton)?.setOnClickListener {
+            val currentUserId = getCurrentUserId()
+            if (currentUserId == -1) {
+                Toast.makeText(this, "Please log in to view challenges", Toast.LENGTH_SHORT).show()
+            } else {
+                // Navigate to challenges (toast for now)
+                Toast.makeText(this, "Daily Challenges feature coming soon!", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         // Setup click listeners
         setupGamificationClickListeners()
 

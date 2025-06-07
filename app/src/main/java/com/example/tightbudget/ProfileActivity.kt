@@ -300,7 +300,7 @@ class ProfileActivity : AppCompatActivity() {
 
         // Set up click listener for "All Badges"
         binding.allBadgesButton.setOnClickListener {
-            Toast.makeText(this, "All Badges feature coming soon!", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, AchievementsActivity::class.java))
         }
     }
 
