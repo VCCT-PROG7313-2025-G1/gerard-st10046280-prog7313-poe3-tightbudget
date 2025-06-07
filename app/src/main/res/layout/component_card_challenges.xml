@@ -17,7 +17,8 @@
         <!-- Header with points -->
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -30,10 +31,10 @@
                 android:layout_centerVertical="true" />
 
             <TextView
-                android:id="@+id/totalPoints"
+                android:id="@+id/todayPointsEarned"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="150 pts"
+                android:text="+0 pts today"
                 android:textColor="@color/primary_purple_light"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -41,32 +42,89 @@
                 android:layout_centerVertical="true" />
         </RelativeLayout>
 
-        <!-- Challenge 1 -->
+        <!-- Challenge Progress Summary -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="12dp">
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/rounded_light_background"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🎯"
+                android:textSize="20sp"
+                android:layout_marginEnd="12dp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/challengesSummaryText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 of 3 challenges completed"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_dark" />
+
+                <ProgressBar
+                    android:id="@+id/challengesProgressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp"
+                    android:layout_marginTop="4dp"
+                    android:progress="0"
+                    android:progressTint="@color/teal_light"
+                    android:progressBackgroundTint="@color/gray_light" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/challengesPointsTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+0 pts"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/teal_light"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
+
+        <!-- Challenge 1 -->
+        <LinearLayout
+            android:id="@+id/challenge1Layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
 
             <CheckBox
                 android:id="@+id/challenge1Checkbox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:buttonTint="@color/teal_light" />
+                android:buttonTint="@color/teal_light"
+                android:enabled="false" />
 
             <TextView
+                android:id="@+id/challenge1Text"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Log 3 expenses today"
+                android:text="Loading challenges..."
                 android:textColor="@color/text_medium"
                 android:textSize="14sp"
                 android:layout_gravity="center_vertical" />
 
             <TextView
+                android:id="@+id/challenge1Progress"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="1/3"
+                android:text="0/3"
                 android:textColor="@color/text_medium"
                 android:textSize="14sp"
                 android:layout_gravity="center_vertical" />
@@ -74,34 +132,85 @@
 
         <!-- Challenge 2 -->
         <LinearLayout
+            android:id="@+id/challenge2Layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="8dp">
+            android:layout_marginBottom="8dp">
 
             <CheckBox
                 android:id="@+id/challenge2Checkbox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:buttonTint="@color/teal_light"
-                android:checked="true" />
+                android:enabled="false" />
 
             <TextView
+                android:id="@+id/challenge2Text"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Stay under food budget"
+                android:text="Loading challenges..."
                 android:textColor="@color/text_medium"
                 android:textSize="14sp"
                 android:layout_gravity="center_vertical" />
 
             <TextView
+                android:id="@+id/challenge2Progress"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="+50 pts"
+                android:text="+0 pts"
                 android:textColor="@color/teal_light"
                 android:textSize="14sp"
                 android:layout_gravity="center_vertical" />
         </LinearLayout>
+
+        <!-- Challenge 3 -->
+        <LinearLayout
+            android:id="@+id/challenge3Layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <CheckBox
+                android:id="@+id/challenge3Checkbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:buttonTint="@color/teal_light"
+                android:enabled="false" />
+
+            <TextView
+                android:id="@+id/challenge3Text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Loading challenges..."
+                android:textColor="@color/text_medium"
+                android:textSize="14sp"
+                android:layout_gravity="center_vertical" />
+
+            <TextView
+                android:id="@+id/challenge3Progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+0 pts"
+                android:textColor="@color/teal_light"
+                android:textSize="14sp"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
+
+        <!-- View All Challenges Button -->
+        <TextView
+            android:id="@+id/viewAllChallengesButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="View All Challenges"
+            android:textColor="@color/primary_purple_light"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:background="?attr/selectableItemBackground"
+            android:padding="8dp" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>
