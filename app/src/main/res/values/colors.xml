@@ -29,6 +29,8 @@
     <color name="text_light">#666666</color>
     <color name="text_hint">#AAAAAA</color>
     <color name="border_color">#DDDDDD</color>
+    <color name="profile_background">#8E24AA</color>
+
 
     <color name="orange">#FFA726</color>
     <color name="yellow">#FFCB45</color>

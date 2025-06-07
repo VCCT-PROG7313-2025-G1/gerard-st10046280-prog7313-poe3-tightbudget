@@ -34,8 +34,8 @@ import com.example.tightbudget.utils.EmojiUtils
 import com.example.tightbudget.utils.ProgressBarUtils
 import kotlinx.coroutines.launch
 import java.util.Date
-import android.util.TypedValue // Add this import
-import android.view.ViewGroup // Add this import
+import android.util.TypedValue
+import android.view.ViewGroup
 
 /**
  * Dashboard screen showing financial summary, goals, charts and quick access buttons.
@@ -66,7 +66,7 @@ class DashboardActivity : AppCompatActivity() {
         setContentView(R.layout.activity_dashboard)
 
         // Initialize Firebase data manager
-        firebaseDataManager = FirebaseDataManager()
+        firebaseDataManager = FirebaseDataManager.getInstance()
         gamificationManager = GamificationManager.getInstance()
 
         // Find UI components
@@ -100,8 +100,85 @@ class DashboardActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         // Refresh data when returning to the dashboard
+        loadUserInformation()
         loadFinancialData()
         loadGamificationData()
+    }
+
+    /**
+     * Load user information for the header
+     */
+    private fun loadUserInformation() {
+        val currentUserId = getCurrentUserId()
+
+        if (currentUserId == -1) {
+            // Guest user
+            setupGuestHeader()
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                // Get user from Firebase
+                val user = firebaseDataManager.getUserById(currentUserId)
+
+                // Get gamification data for level and streak
+                val userProgress = gamificationManager.getUserProgress(currentUserId)
+                val userLevel = gamificationManager.calculateLevel(userProgress.totalPoints)
+
+                runOnUiThread {
+                    updateHeaderWithUserData(user?.fullName, userLevel, userProgress.currentStreak)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading user information: ${e.message}", e)
+                runOnUiThread {
+                    setupGuestHeader()
+                }
+            }
+        }
+    }
+
+    /**
+     * Update header with real user data
+     */
+    private fun updateHeaderWithUserData(userName: String?, level: Int, streak: Int) {
+        val headerRoot = findViewById<View>(R.id.dashboardHeaderRoot)
+
+        // Update welcome message
+        val welcomeText = headerRoot.findViewById<TextView>(R.id.welcomeText)
+        welcomeText?.text = if (userName != null) {
+            "Welcome back, ${userName.split(" ").firstOrNull() ?: userName}!"
+        } else {
+            "Welcome back!"
+        }
+
+        // Update profile level badge
+        val profileLevelBadge = headerRoot.findViewById<TextView>(R.id.profileLevelBadge)
+        profileLevelBadge?.text = level.toString()
+
+        // Update streak count
+        val headerStreakCount = headerRoot.findViewById<TextView>(R.id.headerStreakCount)
+        headerStreakCount?.text = streak.toString()
+
+        Log.d(TAG, "Header updated - User: $userName, Level: $level, Streak: $streak")
+    }
+
+    /**
+     * Setup header for guest users
+     */
+    private fun setupGuestHeader() {
+        val headerRoot = findViewById<View>(R.id.dashboardHeaderRoot)
+
+        // Set guest welcome message
+        val welcomeText = headerRoot.findViewById<TextView>(R.id.welcomeText)
+        welcomeText?.text = "Welcome to TightBudget!"
+
+        // Set guest level and streak
+        val profileLevelBadge = headerRoot.findViewById<TextView>(R.id.profileLevelBadge)
+        profileLevelBadge?.text = "0"
+
+        val headerStreakCount = headerRoot.findViewById<TextView>(R.id.headerStreakCount)
+        headerStreakCount?.text = "0"
     }
 
     /**
@@ -193,8 +270,6 @@ class DashboardActivity : AppCompatActivity() {
      * Show/hide loading indicators
      */
     private fun showLoadingState(show: Boolean) {
-        // You can add loading indicators here if you have them in your layout
-        // For now, we'll just log the state
         Log.d(TAG, if (show) "Showing loading state" else "Hiding loading state")
     }
 
@@ -224,99 +299,6 @@ class DashboardActivity : AppCompatActivity() {
         val categoryContainer = root.findViewById<LinearLayout>(R.id.categoryContainer)
         if (categoryContainer != null && currentUserId != -1) {
             categoryContainer.removeAllViews()
-        }
-    }
-
-    /**
-     * Load user information using Firebase
-     */
-    private fun loadUserInformation() {
-        lifecycleScope.launch {
-            try {
-                val previousUserId = currentUserId
-                currentUserId = getCurrentUserId()
-
-                if (currentUserId != previousUserId) {
-                    clearFinancialDisplays()
-                }
-
-                if (currentUserId != -1) {
-                    // User is logged in - get user data from Firebase
-                    Log.d(TAG, "Loading user information from Firebase for user $currentUserId")
-
-                    val user = firebaseDataManager.getUserById(currentUserId)
-
-                    runOnUiThread {
-                        if (user != null) {
-                            // Set welcome message and balance
-                            welcomeTextView.text = "Welcome back, ${user.fullName}!"
-                            balanceAmountView.text = "R${String.format("%,.2f", user.balance)}"
-                            Log.d(TAG, "Loaded user from Firebase: ${user.fullName}")
-                        } else {
-                            // Try by email if user not found by ID
-                            val userEmail = intent.getStringExtra("USER_EMAIL")
-                            if (!userEmail.isNullOrEmpty()) {
-                                lifecycleScope.launch {
-                                    try {
-                                        val userByEmail = firebaseDataManager.getUserByEmail(userEmail)
-                                        if (userByEmail != null) {
-                                            runOnUiThread {
-                                                welcomeTextView.text = "Welcome back, ${userByEmail.fullName}!"
-                                                balanceAmountView.text = "R${String.format("%,.2f", userByEmail.balance)}"
-                                            }
-                                            // Save the user ID since we found them by email
-                                            saveUserSession(userByEmail.id)
-                                            currentUserId = userByEmail.id
-                                            Log.d(TAG, "Found user by email in Firebase: ${userByEmail.id}")
-                                            // Refresh financial data with newly found user ID
-                                            loadFinancialData()
-                                        } else {
-                                            runOnUiThread { showDefaultUserInfo() }
-                                        }
-                                    } catch (e: Exception) {
-                                        Log.e(TAG, "Error finding user by email in Firebase: ${e.message}", e)
-                                        runOnUiThread { showDefaultUserInfo() }
-                                    }
-                                }
-                            } else {
-                                showDefaultUserInfo()
-                            }
-                        }
-                    }
-                } else {
-                    // Try to find user by email from intent
-                    val userEmail = intent.getStringExtra("USER_EMAIL")
-                    if (!userEmail.isNullOrEmpty()) {
-                        val userByEmail = firebaseDataManager.getUserByEmail(userEmail)
-                        if (userByEmail != null) {
-                            runOnUiThread {
-                                welcomeTextView.text = "Welcome back, ${userByEmail.fullName}!"
-                                balanceAmountView.text = "R${String.format("%,.2f", userByEmail.balance)}"
-                            }
-                            saveUserSession(userByEmail.id)
-                            currentUserId = userByEmail.id
-                            Log.d(TAG, "Found and saved user from email: ${userByEmail.id}")
-                            loadFinancialData()
-                        } else {
-                            runOnUiThread { showDefaultUserInfo() }
-                        }
-                    } else {
-                        runOnUiThread { showDefaultUserInfo() }
-                    }
-                }
-
-                // Show placeholder data if user not logged in
-                if (currentUserId == -1) {
-                    runOnUiThread { showPlaceholderData() }
-                }
-
-            } catch (e: Exception) {
-                Log.e(TAG, "Error loading user information from Firebase: ${e.message}", e)
-                runOnUiThread {
-                    showDefaultUserInfo()
-                    showPlaceholderData()
-                }
-            }
         }
     }
 
@@ -976,14 +958,10 @@ class DashboardActivity : AppCompatActivity() {
         root.findViewById<TextView>(R.id.viewAllSpendingButton)?.setOnClickListener {
             startActivity(Intent(this, CategorySpendingActivity::class.java))
         }
-
-        // REMOVE THESE LINES - Don't hide gamification elements:
-        // val allBadgesButton = root.findViewById<TextView>(R.id.allBadgesButton)
-        // allBadgesButton?.visibility = View.GONE
     }
 
     /**
-     * UPDATED: Setup gamification components (replaces setupAchievementPlaceholders)
+     * Setup gamification components (replaces setupAchievementPlaceholders)
      */
     private fun setupGamificationComponents() {
         val root = findViewById<View>(R.id.dashboardMainCardsRoot)
@@ -1004,7 +982,7 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     /**
-     * NEW: Load real gamification data for dashboard components
+     * Load real gamification data for dashboard components
      */
     private fun loadGamificationData() {
         val currentUserId = getCurrentUserId()
@@ -1271,7 +1249,7 @@ class DashboardActivity : AppCompatActivity() {
      * Get current progress for a challenge (simplified)
      */
     private fun getCurrentChallengeProgress(challenge: com.example.tightbudget.models.DailyChallenge): Int {
-        // Simplified progress calculation - you can enhance this later
+        // Simplified progress calculation
         return if (challenge.isCompleted) challenge.targetValue else kotlin.random.Random.nextInt(0, challenge.targetValue)
     }
 
