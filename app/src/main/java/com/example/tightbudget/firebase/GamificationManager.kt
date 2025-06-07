@@ -410,68 +410,203 @@ class GamificationManager {
     fun getAllAchievements(): List<Achievement> {
         // Return predefined achievements with consistent IDs
         return listOf(
+            // === BEGINNER ACHIEVEMENTS ===
             Achievement(
                 id = "first_transaction",
                 title = "First Steps",
                 description = "Add your first transaction",
                 emoji = "🎯",
-                pointsRequired = 50,  // Good starting bonus
+                pointsRequired = 50,
                 type = AchievementType.TRANSACTIONS,
                 targetValue = 1
             ),
             Achievement(
-                id = "transactions_10",
+                id = "transactions_5",
                 title = "Getting Started",
-                description = "Add 10 transactions",
-                emoji = "📈",
-                pointsRequired = 100, // NEW achievement
+                description = "Add 5 transactions",
+                emoji = "📝",
+                pointsRequired = 75,
                 type = AchievementType.TRANSACTIONS,
+                targetValue = 5
+            ),
+            Achievement(
+                id = "first_receipt",
+                title = "Receipt Rookie",
+                description = "Upload your first receipt",
+                emoji = "📄",
+                pointsRequired = 40,
+                type = AchievementType.RECEIPTS,
+                targetValue = 1
+            ),
+
+            // === INTERMEDIATE ACHIEVEMENTS ===
+            Achievement(
+                id = "transactions_25",
+                title = "Transaction Pro",
+                description = "Add 25 transactions",
+                emoji = "💼",
+                pointsRequired = 150,
+                type = AchievementType.TRANSACTIONS,
+                targetValue = 25
+            ),
+            Achievement(
+                id = "receipts_10",
+                title = "Receipt Collector",
+                description = "Upload 10 receipts",
+                emoji = "📋",
+                pointsRequired = 200,
+                type = AchievementType.RECEIPTS,
                 targetValue = 10
             ),
             Achievement(
-                id = "transactions_50",
-                title = "Transaction Pro",
-                description = "Add 50 transactions",
-                emoji = "💼",
-                pointsRequired = 200, // NEW achievement
-                type = AchievementType.TRANSACTIONS,
-                targetValue = 50
+                id = "streak_3",
+                title = "Three Day Hero",
+                description = "Log transactions for 3 days straight",
+                emoji = "🔥",
+                pointsRequired = 100,
+                type = AchievementType.STREAK,
+                targetValue = 3
             ),
             Achievement(
                 id = "streak_7",
                 title = "Week Warrior",
                 description = "Log transactions for 7 days straight",
-                emoji = "🔥",
-                pointsRequired = 150, // Reduced from 200
+                emoji = "⚡",
+                pointsRequired = 200,
                 type = AchievementType.STREAK,
                 targetValue = 7
             ),
             Achievement(
-                id = "streak_30",
-                title = "Month Master",
-                description = "Log transactions for 30 days straight",
-                emoji = "⭐",
-                pointsRequired = 500, // NEW achievement
-                type = AchievementType.STREAK,
-                targetValue = 30
-            ),
-            Achievement(
-                id = "points_1000",
+                id = "points_500",
                 title = "Point Collector",
-                description = "Earn 1000 total points",
-                emoji = "💎",
-                pointsRequired = 200, // Bonus for reaching this milestone
+                description = "Earn 500 total points",
+                emoji = "⭐",
+                pointsRequired = 100,
                 type = AchievementType.POINTS,
-                targetValue = 1000
+                targetValue = 500
+            ),
+
+            // === ADVANCED ACHIEVEMENTS ===
+            Achievement(
+                id = "transactions_50",
+                title = "Budget Master",
+                description = "Add 50 transactions",
+                emoji = "👑",
+                pointsRequired = 300,
+                type = AchievementType.TRANSACTIONS,
+                targetValue = 50
             ),
             Achievement(
                 id = "receipts_25",
                 title = "Receipt Master",
                 description = "Upload 25 receipts",
-                emoji = "📄",
-                pointsRequired = 300, // Increased from 150, higher target
+                emoji = "🗂️",
+                pointsRequired = 400,
                 type = AchievementType.RECEIPTS,
                 targetValue = 25
+            ),
+            Achievement(
+                id = "streak_14",
+                title = "Two Week Champion",
+                description = "Log transactions for 14 days straight",
+                emoji = "🏆",
+                pointsRequired = 500,
+                type = AchievementType.STREAK,
+                targetValue = 14
+            ),
+            Achievement(
+                id = "points_1500",
+                title = "Point Millionaire",
+                description = "Earn 1500 total points",
+                emoji = "💎",
+                pointsRequired = 300,
+                type = AchievementType.POINTS,
+                targetValue = 1500
+            ),
+            Achievement(
+                id = "categories_10",
+                title = "Category Explorer",
+                description = "Use 10 different categories",
+                emoji = "🗺️",
+                pointsRequired = 250,
+                type = AchievementType.CATEGORIES,
+                targetValue = 10
+            ),
+
+            // === EXPERT ACHIEVEMENTS ===
+            Achievement(
+                id = "transactions_100",
+                title = "Transaction Legend",
+                description = "Add 100 transactions",
+                emoji = "🌟",
+                pointsRequired = 600,
+                type = AchievementType.TRANSACTIONS,
+                targetValue = 100
+            ),
+            Achievement(
+                id = "receipts_50",
+                title = "Receipt Royalty",
+                description = "Upload 50 receipts",
+                emoji = "👑",
+                pointsRequired = 800,
+                type = AchievementType.RECEIPTS,
+                targetValue = 50
+            ),
+            Achievement(
+                id = "streak_30",
+                title = "Month Master",
+                description = "Log transactions for 30 days straight",
+                emoji = "🚀",
+                pointsRequired = 1000,
+                type = AchievementType.STREAK,
+                targetValue = 30
+            ),
+            Achievement(
+                id = "points_5000",
+                title = "Point Grandmaster",
+                description = "Earn 5000 total points",
+                emoji = "💫",
+                pointsRequired = 1000,
+                type = AchievementType.POINTS,
+                targetValue = 5000
+            ),
+
+            // === LEGENDARY ACHIEVEMENTS ===
+            Achievement(
+                id = "transactions_250",
+                title = "Budget Grandmaster",
+                description = "Add 250 transactions",
+                emoji = "🏅",
+                pointsRequired = 1500,
+                type = AchievementType.TRANSACTIONS,
+                targetValue = 250
+            ),
+            Achievement(
+                id = "receipts_100",
+                title = "Receipt Emperor",
+                description = "Upload 100 receipts",
+                emoji = "🎖️",
+                pointsRequired = 2000,
+                type = AchievementType.RECEIPTS,
+                targetValue = 100
+            ),
+            Achievement(
+                id = "streak_60",
+                title = "Two Month Legend",
+                description = "Log transactions for 60 days straight",
+                emoji = "🔮",
+                pointsRequired = 2500,
+                type = AchievementType.STREAK,
+                targetValue = 60
+            ),
+            Achievement(
+                id = "points_10000",
+                title = "Financial Deity",
+                description = "Earn 10000 total points",
+                emoji = "✨",
+                pointsRequired = 2000,
+                type = AchievementType.POINTS,
+                targetValue = 10000
             )
         )
     }
