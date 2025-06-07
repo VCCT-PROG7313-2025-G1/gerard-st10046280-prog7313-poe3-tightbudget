@@ -36,6 +36,9 @@ import kotlinx.coroutines.launch
 import java.util.Date
 import android.util.TypedValue
 import android.view.ViewGroup
+import com.example.tightbudget.models.Achievement
+import com.example.tightbudget.models.UserProgress
+import kotlin.collections.forEachIndexed
 
 /**
  * Dashboard screen showing financial summary, goals, charts and quick access buttons.
@@ -995,6 +998,8 @@ class DashboardActivity : AppCompatActivity() {
 
         // Load real gamification data
         loadGamificationData()
+        // If no user is logged in, setup guest state
+        setupGuestAchievementsState()
     }
 
     /**
@@ -1044,6 +1049,51 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     /**
+     * Setup guest user achievements state
+     */
+    private fun setupGuestAchievementsState() {
+        val root = findViewById<View>(R.id.dashboardMainCardsRoot)
+
+        // Set guest values for level/points/streak
+        root.findViewById<TextView>(R.id.dashboardUserLevel)?.text = "0"
+        root.findViewById<TextView>(R.id.dashboardUserPoints)?.text = "0"
+        root.findViewById<TextView>(R.id.dashboardUserStreak)?.text = "0"
+
+        // Set achievement progress for guest
+        root.findViewById<TextView>(R.id.achievementProgressText)?.text = "0/21"
+        root.findViewById<ProgressBar>(R.id.achievementProgressBar)?.progress = 0
+        root.findViewById<TextView>(R.id.achievementProgressSubtext)?.text = "Create an account to start unlocking achievements!"
+
+        // Hide recent achievement for guest
+        root.findViewById<LinearLayout>(R.id.recentAchievementLayout)?.visibility = View.GONE
+
+        // Set guest state for top achievements
+        val guestAchievements = listOf(
+            Triple("🎯", "First Steps", false),
+            Triple("📝", "Getting Started", false),
+            Triple("📄", "Receipt Rookie", false)
+        )
+
+        val achievementViews = listOf(
+            Pair(root.findViewById<TextView>(R.id.achievement1Icon), root.findViewById<TextView>(R.id.achievement1Title)),
+            Pair(root.findViewById<TextView>(R.id.achievement2Icon), root.findViewById<TextView>(R.id.achievement2Title)),
+            Pair(root.findViewById<TextView>(R.id.achievement3Icon), root.findViewById<TextView>(R.id.achievement3Title))
+        )
+
+        guestAchievements.forEachIndexed { index, (emoji, title, _) ->
+            if (index < achievementViews.size) {
+                val (iconView, titleView) = achievementViews[index]
+
+                iconView?.text = emoji
+                titleView?.text = title
+                iconView?.alpha = 0.3f
+                iconView?.background = ContextCompat.getDrawable(this, R.drawable.achievement_mini_background)
+                titleView?.setTextColor(ContextCompat.getColor(this, R.color.text_light))
+            }
+        }
+    }
+
+    /**
      * Update the achievements component card
      */
     private fun updateAchievementsComponent(level: Int, points: Int, streak: Int, userProgress: com.example.tightbudget.models.UserProgress) {
@@ -1054,17 +1104,155 @@ class DashboardActivity : AppCompatActivity() {
         root.findViewById<TextView>(R.id.dashboardUserPoints)?.text = points.toString()
         root.findViewById<TextView>(R.id.dashboardUserStreak)?.text = streak.toString()
 
-        // Update achievement badges
-        val badges = listOf(
-            Triple("First Steps", "First Steps", userProgress.transactionCount >= 1),
-            Triple("Streak Master", "Streak Master", userProgress.longestStreak >= 7),
-            Triple("Point Collector", "Point Collector", userProgress.totalPoints >= 500),
-            Triple("Receipt Pro", "Receipt Pro", userProgress.receiptsUploaded >= 10)
-        )
+        lifecycleScope.launch {
+            try {
+                // Get all achievements for progress calculation
+                val allAchievements = gamificationManager.getAllAchievements()
+                val unlockedCount = userProgress.achievementsUnlocked.size
+                val totalCount = allAchievements.size
 
-        updateDashboardBadges(badges)
+                // Calculate overall progress
+                val progressPercentage = if (totalCount > 0) (unlockedCount * 100) / totalCount else 0
+
+                // Get recent achievement (most recently unlocked)
+                val recentAchievement = if (userProgress.achievementsUnlocked.isNotEmpty()) {
+                    allAchievements.find { it.id == userProgress.achievementsUnlocked.lastOrNull() }
+                } else null
+
+                // Get top 3 achievements to show (first 3 that are unlocked or closest to unlock)
+                val topAchievements = getTopAchievementsForDashboard(allAchievements, userProgress)
+
+                runOnUiThread {
+                    updateAchievementProgress(root, unlockedCount, totalCount, progressPercentage, userProgress)
+                    updateRecentAchievement(root, recentAchievement)
+                    updateTopAchievements(root, topAchievements)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error updating achievements component: ${e.message}", e)
+            }
+        }
 
         Log.d(TAG, "Dashboard achievements updated - Level: $level, Points: $points, Streak: $streak")
+    }
+
+    /**
+     * Update achievement progress section
+     */
+    private fun updateAchievementProgress(
+        root: View,
+        unlockedCount: Int,
+        totalCount: Int,
+        progressPercentage: Int,
+        userProgress: com.example.tightbudget.models.UserProgress
+    ) {
+        root.findViewById<TextView>(R.id.achievementProgressText)?.text = "$unlockedCount/$totalCount"
+        root.findViewById<ProgressBar>(R.id.achievementProgressBar)?.progress = progressPercentage
+
+        val subtextMessage = when {
+            unlockedCount == 0 -> "Add your first transaction to unlock achievements!"
+            unlockedCount < 5 -> "Great start! Keep logging transactions to unlock more."
+            unlockedCount < 10 -> "You're on fire! ${totalCount - unlockedCount} achievements remaining."
+            unlockedCount < totalCount -> "Almost there! Only ${totalCount - unlockedCount} left to unlock."
+            else -> "🎉 Achievement Master! All achievements unlocked!"
+        }
+
+        root.findViewById<TextView>(R.id.achievementProgressSubtext)?.text = subtextMessage
+    }
+
+    /**
+     * Update recent achievement section
+     */
+    private fun updateRecentAchievement(root: View, recentAchievement: com.example.tightbudget.models.Achievement?) {
+        val recentLayout = root.findViewById<LinearLayout>(R.id.recentAchievementLayout)
+
+        if (recentAchievement != null) {
+            recentLayout?.visibility = View.VISIBLE
+            root.findViewById<TextView>(R.id.recentAchievementIcon)?.text = recentAchievement.emoji
+            root.findViewById<TextView>(R.id.recentAchievementTitle)?.text = recentAchievement.title
+            root.findViewById<TextView>(R.id.recentAchievementPoints)?.text = "+${recentAchievement.pointsRequired} pts"
+        } else {
+            recentLayout?.visibility = View.GONE
+        }
+    }
+
+    /**
+     * Update top 3 achievements preview
+     */
+    private fun updateTopAchievements(root: View, topAchievements: List<AchievementDisplayInfo>) {
+        val achievementViews = listOf(
+            Pair(root.findViewById<TextView>(R.id.achievement1Icon), root.findViewById<TextView>(R.id.achievement1Title)),
+            Pair(root.findViewById<TextView>(R.id.achievement2Icon), root.findViewById<TextView>(R.id.achievement2Title)),
+            Pair(root.findViewById<TextView>(R.id.achievement3Icon), root.findViewById<TextView>(R.id.achievement3Title))
+        )
+
+        topAchievements.forEachIndexed { index, achievementInfo ->
+            if (index < achievementViews.size) {
+                val (iconView, titleView) = achievementViews[index]
+
+                iconView?.text = achievementInfo.achievement.emoji
+                titleView?.text = achievementInfo.achievement.title
+
+                if (achievementInfo.isUnlocked) {
+                    iconView?.alpha = 1f
+                    iconView?.background = ContextCompat.getDrawable(this, R.drawable.achievement_mini_unlocked)
+                    titleView?.setTextColor(ContextCompat.getColor(this, R.color.text_dark))
+                } else {
+                    iconView?.alpha = 0.6f
+                    iconView?.background = ContextCompat.getDrawable(this, R.drawable.achievement_mini_background)
+                    titleView?.setTextColor(ContextCompat.getColor(this, R.color.text_medium))
+                }
+            }
+        }
+    }
+
+    /**
+     * Get top achievements for dashboard display
+     */
+    private suspend fun getTopAchievementsForDashboard(
+        allAchievements: List<com.example.tightbudget.models.Achievement>,
+        userProgress: com.example.tightbudget.models.UserProgress
+    ): List<AchievementDisplayInfo> {
+        return try {
+            val transactions = firebaseDataManager.getAllTransactionsForUser(currentUserId)
+
+            allAchievements.take(3).map { achievement ->
+                val isUnlocked = userProgress.achievementsUnlocked.contains(achievement.id)
+                val progress = calculateAchievementProgress(achievement, userProgress, transactions)
+
+                AchievementDisplayInfo(
+                    achievement = achievement,
+                    isUnlocked = isUnlocked,
+                    currentProgress = progress,
+                    progressPercentage = if (achievement.targetValue > 0) {
+                        minOf(100, (progress * 100) / achievement.targetValue)
+                    } else 100
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting top achievements: ${e.message}", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * Calculate achievement progress for dashboard
+     */
+    private fun calculateAchievementProgress(
+        achievement: Achievement,
+        userProgress: UserProgress,
+        transactions: List<Transaction>
+    ): Int {
+        return when (achievement.type) {
+            com.example.tightbudget.models.AchievementType.TRANSACTIONS -> userProgress.transactionCount
+            com.example.tightbudget.models.AchievementType.RECEIPTS -> userProgress.receiptsUploaded
+            com.example.tightbudget.models.AchievementType.STREAK -> userProgress.longestStreak
+            com.example.tightbudget.models.AchievementType.POINTS -> userProgress.totalPoints
+            com.example.tightbudget.models.AchievementType.BUDGET_GOALS -> userProgress.budgetGoalsMet
+            com.example.tightbudget.models.AchievementType.CATEGORIES -> {
+                transactions.map { it.category }.distinct().size
+            }
+            else -> 0
+        }
     }
 
     /**
@@ -1296,4 +1484,14 @@ class DashboardActivity : AppCompatActivity() {
             this.requestLayout()
         }
     }
+
+    /**
+     * Data class for achievement display on dashboard
+     */
+    data class AchievementDisplayInfo(
+        val achievement: com.example.tightbudget.models.Achievement,
+        val isUnlocked: Boolean,
+        val currentProgress: Int,
+        val progressPercentage: Int
+    )
 }

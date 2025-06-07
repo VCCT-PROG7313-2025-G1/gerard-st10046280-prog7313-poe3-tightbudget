@@ -25,7 +25,7 @@
                 android:id="@+id/achievementsTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Your Achievements"
+                android:text="Your Progress"
                 android:textColor="@color/text_dark"
                 android:textSize="16sp"
                 android:textStyle="bold"
@@ -36,7 +36,7 @@
                 android:id="@+id/allBadgesButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="View Profile"
+                android:text="All Badges"
                 android:textColor="@color/primary_purple_light"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -144,45 +144,124 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Badge row -->
+        <!-- Achievement Progress Bar -->
         <LinearLayout
-            android:id="@+id/badgeRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/achievement_progress_background"
+            android:padding="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Achievement Progress"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_dark" />
+
+                <TextView
+                    android:id="@+id/achievementProgressText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0/21"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/teal_light" />
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/achievementProgressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:progress="0"
+                android:progressTint="@color/gold"
+                android:progressBackgroundTint="@color/gray_light" />
+
+            <TextView
+                android:id="@+id/achievementProgressSubtext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add your first transaction to unlock achievements!"
+                android:textSize="12sp"
+                android:textColor="@color/text_medium"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- Recent Achievement (if any) -->
+        <LinearLayout
+            android:id="@+id/recentAchievementLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center">
+            android:background="@drawable/recent_achievement_background"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone">
 
-            <!-- Badge 1 -->
+            <TextView
+                android:id="@+id/recentAchievementIcon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:text="🎯"
+                android:textSize="20sp"
+                android:gravity="center"
+                android:layout_marginEnd="12dp" />
+
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
+                android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/saverBadgeIcon"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:text="🔒"
-                    android:textSize="24sp"
-                    android:gravity="center"
-                    android:textAlignment="center"
-                    android:alpha="0.5"
-                    android:contentDescription="Achievement Badge 1" />
-
-                <TextView
-                    android:id="@+id/saverBadgeLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Loading..."
-                    android:textColor="@color/text_medium"
-                    android:textSize="11sp"
-                    android:layout_marginTop="4dp"
-                    android:gravity="center" />
+                    android:text="🏆 Recently Unlocked!"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/achievement_unlocked" />
+
+                <TextView
+                    android:id="@+id/recentAchievementTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="First Steps"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_dark" />
             </LinearLayout>
 
-            <!-- Badge 2 -->
+            <TextView
+                android:id="@+id/recentAchievementPoints"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+50 pts"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/teal_light"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
+
+        <!-- Top 3 Achievements Preview -->
+        <LinearLayout
+            android:id="@+id/topAchievementsRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:weightSum="3">
+
+            <!-- Achievement 1 -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -191,28 +270,29 @@
                 android:gravity="center">
 
                 <TextView
-                    android:id="@+id/consistentBadgeIcon"
+                    android:id="@+id/achievement1Icon"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:text="🔒"
                     android:textSize="24sp"
                     android:gravity="center"
-                    android:textAlignment="center"
-                    android:alpha="0.5"
-                    android:contentDescription="Achievement Badge 2" />
+                    android:background="@drawable/achievement_mini_background"
+                    android:alpha="0.5" />
 
                 <TextView
-                    android:id="@+id/consistentBadgeLabel"
+                    android:id="@+id/achievement1Title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Loading..."
-                    android:textColor="@color/text_medium"
                     android:textSize="11sp"
+                    android:textColor="@color/text_medium"
                     android:layout_marginTop="4dp"
-                    android:gravity="center" />
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
             </LinearLayout>
 
-            <!-- Badge 3 -->
+            <!-- Achievement 2 -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -221,28 +301,29 @@
                 android:gravity="center">
 
                 <TextView
-                    android:id="@+id/transportBadgeIcon"
+                    android:id="@+id/achievement2Icon"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:text="🔒"
                     android:textSize="24sp"
                     android:gravity="center"
-                    android:textAlignment="center"
-                    android:alpha="0.5"
-                    android:contentDescription="Achievement Badge 3" />
+                    android:background="@drawable/achievement_mini_background"
+                    android:alpha="0.5" />
 
                 <TextView
-                    android:id="@+id/transportBadgeLabel"
+                    android:id="@+id/achievement2Title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Loading..."
-                    android:textColor="@color/text_medium"
                     android:textSize="11sp"
+                    android:textColor="@color/text_medium"
                     android:layout_marginTop="4dp"
-                    android:gravity="center" />
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
             </LinearLayout>
 
-            <!-- Badge 4 -->
+            <!-- Achievement 3 -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -251,25 +332,26 @@
                 android:gravity="center">
 
                 <TextView
-                    android:id="@+id/lockedBadgeIcon"
+                    android:id="@+id/achievement3Icon"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:text="🔒"
                     android:textSize="24sp"
                     android:gravity="center"
-                    android:textAlignment="center"
-                    android:alpha="0.5"
-                    android:contentDescription="Achievement Badge 4" />
+                    android:background="@drawable/achievement_mini_background"
+                    android:alpha="0.5" />
 
                 <TextView
-                    android:id="@+id/lockedBadgeLabel"
+                    android:id="@+id/achievement3Title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Loading..."
-                    android:textColor="@color/text_light"
                     android:textSize="11sp"
+                    android:textColor="@color/text_medium"
                     android:layout_marginTop="4dp"
-                    android:gravity="center" />
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

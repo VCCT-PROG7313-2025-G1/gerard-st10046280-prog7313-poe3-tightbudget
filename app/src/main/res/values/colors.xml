@@ -32,7 +32,7 @@
     <color name="profile_background">#8E24AA</color>
     <color name="achievement_unlocked">#FFD700</color>
     <color name="achievement_locked">#BDBDBD</color>
-
+    <color name="progress_background">#F0F8FF</color>
 
     <color name="orange">#FFA726</color>
     <color name="yellow">#FFCB45</color>
