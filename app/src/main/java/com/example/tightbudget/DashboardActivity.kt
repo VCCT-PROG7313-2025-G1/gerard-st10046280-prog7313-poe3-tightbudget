@@ -988,9 +988,21 @@ class DashboardActivity : AppCompatActivity() {
             if (currentUserId == -1) {
                 Toast.makeText(this, "Please log in to view challenges", Toast.LENGTH_SHORT).show()
             } else {
-                // Navigate to challenges (toast for now)
-                Toast.makeText(this, "Daily Challenges feature coming soon!", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this, DailyChallengesActivity::class.java))
             }
+        }
+
+        // Setup click listeners for challenges layouts
+        root.findViewById<View>(R.id.challenge1Layout)?.setOnClickListener {
+            navigateToChallenges("Challenge 1 clicked")
+        }
+
+        root.findViewById<View>(R.id.challenge2Layout)?.setOnClickListener {
+            navigateToChallenges("Challenge 2 clicked")
+        }
+
+        root.findViewById<View>(R.id.challenge3Layout)?.setOnClickListener {
+            navigateToChallenges("Challenge 3 clicked")
         }
 
         // Setup click listeners
@@ -1000,6 +1012,19 @@ class DashboardActivity : AppCompatActivity() {
         loadGamificationData()
         // If no user is logged in, setup guest state
         setupGuestAchievementsState()
+    }
+
+    /**
+     * Helper method to navigate to challenges
+     */
+    private fun navigateToChallenges(logMessage: String) {
+        val currentUserId = getCurrentUserId()
+        if (currentUserId == -1) {
+            Toast.makeText(this, "Please log in to view challenges", Toast.LENGTH_SHORT).show()
+        } else {
+            Log.d(TAG, logMessage)
+            startActivity(Intent(this, DailyChallengesActivity::class.java))
+        }
     }
 
     /**
@@ -1415,8 +1440,9 @@ class DashboardActivity : AppCompatActivity() {
             if (currentUserId == -1) {
                 Toast.makeText(this, "Please log in to view challenges", Toast.LENGTH_SHORT).show()
             } else {
-                // Navigate to challenges or show toast for now
-                Toast.makeText(this, "Daily Challenges feature coming soon!", Toast.LENGTH_SHORT).show()
+                // Navigate to challenges
+                startActivity(Intent(this, DailyChallengesActivity::class.java))
+                Log.d(TAG, "Navigating to DailyChallengesActivity")
             }
         }
     }
