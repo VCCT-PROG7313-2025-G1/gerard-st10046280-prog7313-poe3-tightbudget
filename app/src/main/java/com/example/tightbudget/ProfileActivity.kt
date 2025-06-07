@@ -200,16 +200,16 @@ class ProfileActivity : AppCompatActivity() {
     private fun getLevelRequiredPoints(level: Int): Int {
         return when (level) {
             1 -> 0
-            2 -> 150
-            3 -> 300
-            4 -> 500
-            5 -> 750
-            6 -> 1000
-            7 -> 1500
-            8 -> 2000
-            9 -> 3000
-            10 -> 5000
-            else -> 5000
+            2 -> 400    // Was 150
+            3 -> 800    // Was 300
+            4 -> 1200   // Was 500
+            5 -> 1800   // Was 750
+            6 -> 2500   // Was 1000
+            7 -> 3500   // Was 1500
+            8 -> 5000   // Was 2000
+            9 -> 7500   // Was 3000
+            10 -> 10000 // Was 5000
+            else -> 10000
         }
     }
 

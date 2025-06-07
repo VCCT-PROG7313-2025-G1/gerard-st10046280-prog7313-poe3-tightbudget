@@ -239,16 +239,16 @@ class GamificationManager {
      */
     fun calculateLevel(totalPoints: Int): Int {
         return when {
-            totalPoints >= 5000 -> 10
-            totalPoints >= 3000 -> 9
-            totalPoints >= 2000 -> 8
-            totalPoints >= 1500 -> 7
-            totalPoints >= 1000 -> 6
-            totalPoints >= 750 -> 5
-            totalPoints >= 500 -> 4
-            totalPoints >= 300 -> 3
-            totalPoints >= 150 -> 2
-            else -> 1
+            totalPoints >= 10000 -> 10  // Grandmaster (was 5000)
+            totalPoints >= 7500 -> 9    // Finance Master (was 3000)
+            totalPoints >= 5000 -> 8    // Savings Specialist (was 2000)
+            totalPoints >= 3500 -> 7    // Budget Expert (was 1500)
+            totalPoints >= 2500 -> 6    // Financial Strategist (was 1000)
+            totalPoints >= 1800 -> 5    // Money Manager (was 750)
+            totalPoints >= 1200 -> 4    // Budget Apprentice (was 500)
+            totalPoints >= 800 -> 3     // Smart Spender (was 300)
+            totalPoints >= 400 -> 2     // Penny Tracker (was 150)
+            else -> 1                   // Budget Newbie (0-399)
         }
     }
 
@@ -415,36 +415,63 @@ class GamificationManager {
                 title = "First Steps",
                 description = "Add your first transaction",
                 emoji = "🎯",
-                pointsRequired = 50,
+                pointsRequired = 50,  // Good starting bonus
                 type = AchievementType.TRANSACTIONS,
                 targetValue = 1
+            ),
+            Achievement(
+                id = "transactions_10",
+                title = "Getting Started",
+                description = "Add 10 transactions",
+                emoji = "📈",
+                pointsRequired = 100, // NEW achievement
+                type = AchievementType.TRANSACTIONS,
+                targetValue = 10
+            ),
+            Achievement(
+                id = "transactions_50",
+                title = "Transaction Pro",
+                description = "Add 50 transactions",
+                emoji = "💼",
+                pointsRequired = 200, // NEW achievement
+                type = AchievementType.TRANSACTIONS,
+                targetValue = 50
             ),
             Achievement(
                 id = "streak_7",
                 title = "Week Warrior",
                 description = "Log transactions for 7 days straight",
                 emoji = "🔥",
-                pointsRequired = 200,
+                pointsRequired = 150, // Reduced from 200
                 type = AchievementType.STREAK,
                 targetValue = 7
             ),
             Achievement(
-                id = "points_500",
-                title = "Point Collector",
-                description = "Earn 500 total points",
+                id = "streak_30",
+                title = "Month Master",
+                description = "Log transactions for 30 days straight",
                 emoji = "⭐",
-                pointsRequired = 100,
-                type = AchievementType.POINTS,
-                targetValue = 500
+                pointsRequired = 500, // NEW achievement
+                type = AchievementType.STREAK,
+                targetValue = 30
             ),
             Achievement(
-                id = "receipts_10",
-                title = "Receipt Pro",
-                description = "Upload 10 receipts",
+                id = "points_1000",
+                title = "Point Collector",
+                description = "Earn 1000 total points",
+                emoji = "💎",
+                pointsRequired = 200, // Bonus for reaching this milestone
+                type = AchievementType.POINTS,
+                targetValue = 1000
+            ),
+            Achievement(
+                id = "receipts_25",
+                title = "Receipt Master",
+                description = "Upload 25 receipts",
                 emoji = "📄",
-                pointsRequired = 150,
+                pointsRequired = 300, // Increased from 150, higher target
                 type = AchievementType.RECEIPTS,
-                targetValue = 10
+                targetValue = 25
             )
         )
     }
