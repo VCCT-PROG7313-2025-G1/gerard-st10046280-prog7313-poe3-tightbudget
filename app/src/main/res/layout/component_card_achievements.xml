@@ -15,39 +15,144 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <!-- Section Title -->
-        <TextView
-            android:id="@+id/achievementsTitle"
-            android:layout_width="wrap_content"
+        <!-- Section Title with All Badges button -->
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Your Achievements"
-            android:textColor="@color/text_dark"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:layout_marginBottom="16dp">
 
-        <!-- "All Badges" top-right -->
-        <TextView
-            android:id="@+id/allBadgesButton"
-            android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/achievementsTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Your Achievements"
+                android:textColor="@color/text_dark"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true" />
+
+            <TextView
+                android:id="@+id/allBadgesButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="View Profile"
+                android:textColor="@color/primary_purple_light"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="?attr/selectableItemBackground"
+                android:padding="8dp" />
+        </RelativeLayout>
+
+        <!-- User Progress Summary -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="All Badges"
-            android:textColor="@color/primary_purple_light"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:layout_alignParentEnd="true"
-            android:layout_alignTop="@id/achievementsTitle" />
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp"
+            android:weightSum="3">
+
+            <!-- Level -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/dashboardUserLevel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary_purple_light" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Level"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_medium" />
+            </LinearLayout>
+
+            <!-- Points -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/dashboardUserPoints"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/teal_light" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Points"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_medium" />
+            </LinearLayout>
+
+            <!-- Streak -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🔥"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/dashboardUserStreak"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/orange_light"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Day Streak"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_medium" />
+            </LinearLayout>
+        </LinearLayout>
 
         <!-- Badge row -->
         <LinearLayout
             android:id="@+id/badgeRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/achievementsTitle"
-            android:layout_marginTop="16dp"
             android:orientation="horizontal"
             android:gravity="center">
 
-            <!-- Single Badge Item -->
+            <!-- Badge 1 -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -57,23 +162,27 @@
 
                 <TextView
                     android:id="@+id/saverBadgeIcon"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:text=""
-                    android:textSize="26sp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:text="🔒"
+                    android:textSize="24sp"
                     android:gravity="center"
                     android:textAlignment="center"
-                    android:contentDescription="Saver Badge Icon" />
+                    android:alpha="0.5"
+                    android:contentDescription="Achievement Badge 1" />
 
                 <TextView
+                    android:id="@+id/saverBadgeLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Saver"
+                    android:text="Loading..."
                     android:textColor="@color/text_medium"
-                    android:textSize="12sp"
-                    android:layout_marginTop="4dp" />
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center" />
             </LinearLayout>
 
+            <!-- Badge 2 -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -83,23 +192,27 @@
 
                 <TextView
                     android:id="@+id/consistentBadgeIcon"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:text=""
-                    android:textSize="26sp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:text="🔒"
+                    android:textSize="24sp"
                     android:gravity="center"
                     android:textAlignment="center"
-                    android:contentDescription="Consistent Badge Icon" />
+                    android:alpha="0.5"
+                    android:contentDescription="Achievement Badge 2" />
 
                 <TextView
+                    android:id="@+id/consistentBadgeLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Consistent"
+                    android:text="Loading..."
                     android:textColor="@color/text_medium"
-                    android:textSize="12sp"
-                    android:layout_marginTop="4dp" />
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center" />
             </LinearLayout>
 
+            <!-- Badge 3 -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -109,23 +222,27 @@
 
                 <TextView
                     android:id="@+id/transportBadgeIcon"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:text=""
-                    android:textSize="26sp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:text="🔒"
+                    android:textSize="24sp"
                     android:gravity="center"
                     android:textAlignment="center"
-                    android:contentDescription="Transport Badge Icon" />
+                    android:alpha="0.5"
+                    android:contentDescription="Achievement Badge 3" />
 
                 <TextView
+                    android:id="@+id/transportBadgeLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Transport"
+                    android:text="Loading..."
                     android:textColor="@color/text_medium"
-                    android:textSize="12sp"
-                    android:layout_marginTop="4dp" />
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center" />
             </LinearLayout>
 
+            <!-- Badge 4 -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -135,22 +252,24 @@
 
                 <TextView
                     android:id="@+id/lockedBadgeIcon"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:text=""
-                    android:textSize="26sp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:text="🔒"
+                    android:textSize="24sp"
                     android:gravity="center"
                     android:textAlignment="center"
                     android:alpha="0.5"
-                    android:contentDescription="Locked Badge Icon" />
+                    android:contentDescription="Achievement Badge 4" />
 
                 <TextView
+                    android:id="@+id/lockedBadgeLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Locked"
+                    android:text="Loading..."
                     android:textColor="@color/text_light"
-                    android:textSize="12sp"
-                    android:layout_marginTop="4dp" />
+                    android:textSize="11sp"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

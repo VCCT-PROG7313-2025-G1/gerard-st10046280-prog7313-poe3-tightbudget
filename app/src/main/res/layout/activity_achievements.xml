@@ -1,176 +1,228 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/achievementsRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_gray"
-    tools:context=".AchievementsActivity">
+    android:orientation="vertical"
+    android:background="@color/background_gray">
 
-    <!-- Header -->
-    <LinearLayout
-        android:id="@+id/headerLayout"
+    <!-- Header Section -->
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@drawable/gradient_background"
-        android:paddingTop="40dp"
-        android:paddingBottom="20dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:gravity="center_vertical">
+        android:background="@color/primary_purple_light"
+        android:padding="20dp"
+        android:paddingTop="40dp">
 
         <ImageView
             android:id="@+id/backButton"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_back"
-            android:contentDescription="Back"
-            app:tint="@android:color/white" />
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="4dp" />
 
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Your Achievements"
-            android:textColor="@android:color/white"
+            android:text="Achievements"
+            android:textSize="20sp"
             android:textStyle="bold"
-            android:gravity="center"
-            android:textSize="18sp" />
-    </LinearLayout>
+            android:textColor="@color/white"
+            android:layout_centerInParent="true" />
+    </RelativeLayout>
 
-    <!-- Content ScrollView -->
-    <ScrollView
-        android:layout_below="@id/headerLayout"
+    <!-- Progress Summary Card -->
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="8dp"
-        android:padding="16dp">
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="20dp">
 
-            <!-- Badge Progress Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp">
+                android:text="Your Progress"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_dark"
+                android:layout_marginBottom="12dp" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:text="Badge Progress"
-                        android:textStyle="bold"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_dark"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="12 of 20 badges earned"
-                        android:textColor="@color/text_medium"
-                        android:textSize="14sp"
-                        android:layout_marginTop="4dp" />
-
-                    <ProgressBar
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="4dp"
-                        android:progress="60"
-                        android:progressTint="@color/teal_light"
-                        android:progressBackgroundTint="@color/gray_light" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Total Points Earned: "
-                        android:textColor="@color/text_medium"
-                        android:textSize="14sp"
-                        android:layout_marginTop="12dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="2,450"
-                        android:textColor="@color/primary_purple_light"
-                        android:textStyle="bold"
-                        android:textSize="16sp" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- Filter Chips Row -->
             <LinearLayout
-                android:id="@+id/filterChipsRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center"
-                android:layout_marginBottom="16dp"
-                android:weightSum="4">
+                android:layout_marginBottom="12dp">
 
-                <Button
-                    android:id="@+id/allFilterButton"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="All"
-                    android:textAllCaps="false"
-                    android:backgroundTint="@color/teal_light"
-                    android:textColor="@color/white" />
+                    android:orientation="vertical"
+                    android:gravity="center">
 
-                <Button
-                    android:id="@+id/budgetFilterButton"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    <TextView
+                        android:id="@+id/achievementProgress"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 / 0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/teal_light" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Achievements"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_medium" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Budget"
-                    android:textAllCaps="false"
-                    android:textColor="@color/text_medium" />
+                    android:orientation="vertical"
+                    android:gravity="center">
 
-                <Button
-                    android:id="@+id/savingsFilterButton"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Savings"
-                    android:textAllCaps="false"
-                    android:textColor="@color/text_medium" />
+                    <TextView
+                        android:id="@+id/totalPointsEarned"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary_purple_light" />
 
-                <Button
-                    android:id="@+id/consistencyFilterButton"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Consistency"
-                    android:textAllCaps="false"
-                    android:textColor="@color/text_medium" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Total Points Earned"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_medium" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- Badge RecyclerView -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/badgeRecyclerView"
+            <ProgressBar
+                android:id="@+id/overallProgressBar"
+                style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
-                android:clipToPadding="false"
-                android:padding="4dp"
-                tools:listitem="@layout/item_achievement_badge" />
+                android:layout_height="8dp"
+                android:progress="0"
+                android:progressTint="@color/teal_light"
+                android:progressBackgroundTint="@color/gray_light" />
         </LinearLayout>
-    </ScrollView>
-</RelativeLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Filter Chips Row -->
+    <LinearLayout
+        android:id="@+id/filterChipsRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"
+        android:weightSum="3">
+
+        <Button
+            android:id="@+id/allFilterButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="4dp"
+            android:text="All"
+            android:textAllCaps="false"
+            android:backgroundTint="@color/teal_light"
+            android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/unlockedFilterButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:text="Unlocked"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/lockedFilterButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="16dp"
+            android:text="Locked"
+            android:textAllCaps="false" />
+    </LinearLayout>
+
+    <!-- Loading Progress Bar -->
+    <ProgressBar
+        android:id="@+id/loadingProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="32dp"
+        android:visibility="gone" />
+
+    <!-- Achievements Grid -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/achievementsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:clipToPadding="false" />
+
+    <!-- Empty State Layout -->
+    <LinearLayout
+        android:id="@+id/emptyStateLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🏆"
+            android:textSize="64sp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/emptyStateText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No achievements available"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_dark"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/emptyStateSubtext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Start tracking your expenses to unlock achievements!"
+            android:textSize="14sp"
+            android:textColor="@color/text_medium"
+            android:gravity="center"
+            android:layout_marginTop="8dp" />
+    </LinearLayout>
+</LinearLayout>

@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.CheckBox
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -14,11 +15,13 @@ import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tightbudget.adapters.TransactionAdapter
 import com.example.tightbudget.firebase.FirebaseDataManager
+import com.example.tightbudget.firebase.GamificationManager
 import com.example.tightbudget.models.BudgetGoal
 import com.example.tightbudget.models.CategoryBudget
 import com.example.tightbudget.models.Transaction
@@ -31,6 +34,8 @@ import com.example.tightbudget.utils.EmojiUtils
 import com.example.tightbudget.utils.ProgressBarUtils
 import kotlinx.coroutines.launch
 import java.util.Date
+import android.util.TypedValue
+import android.view.ViewGroup
 
 /**
  * Dashboard screen showing financial summary, goals, charts and quick access buttons.
@@ -41,6 +46,7 @@ class DashboardActivity : AppCompatActivity() {
 
     // Firebase data manager - replaces Room database
     private lateinit var firebaseDataManager: FirebaseDataManager
+    private lateinit var gamificationManager: GamificationManager
 
     // UI components for easy access
     private lateinit var welcomeTextView: TextView
@@ -61,6 +67,7 @@ class DashboardActivity : AppCompatActivity() {
 
         // Initialize Firebase data manager
         firebaseDataManager = FirebaseDataManager.getInstance()
+        gamificationManager = GamificationManager.getInstance()
 
         // Find UI components
         welcomeTextView = findViewById(R.id.welcomeText)
@@ -87,13 +94,91 @@ class DashboardActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupQuickActions()
         setupNavigationButtons()
-        setupAchievementPlaceholders()
+        setupGamificationComponents()
     }
 
     override fun onResume() {
         super.onResume()
         // Refresh data when returning to the dashboard
+        loadUserInformation()
         loadFinancialData()
+        loadGamificationData()
+    }
+
+    /**
+     * Load user information for the header
+     */
+    private fun loadUserInformation() {
+        val currentUserId = getCurrentUserId()
+
+        if (currentUserId == -1) {
+            // Guest user
+            setupGuestHeader()
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                // Get user from Firebase
+                val user = firebaseDataManager.getUserById(currentUserId)
+
+                // Get gamification data for level and streak
+                val userProgress = gamificationManager.getUserProgress(currentUserId)
+                val userLevel = gamificationManager.calculateLevel(userProgress.totalPoints)
+
+                runOnUiThread {
+                    updateHeaderWithUserData(user?.fullName, userLevel, userProgress.currentStreak)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading user information: ${e.message}", e)
+                runOnUiThread {
+                    setupGuestHeader()
+                }
+            }
+        }
+    }
+
+    /**
+     * Update header with real user data
+     */
+    private fun updateHeaderWithUserData(userName: String?, level: Int, streak: Int) {
+        val headerRoot = findViewById<View>(R.id.dashboardHeaderRoot)
+
+        // Update welcome message
+        val welcomeText = headerRoot.findViewById<TextView>(R.id.welcomeText)
+        welcomeText?.text = if (userName != null) {
+            "Welcome back, ${userName.split(" ").firstOrNull() ?: userName}!"
+        } else {
+            "Welcome back!"
+        }
+
+        // Update profile level badge
+        val profileLevelBadge = headerRoot.findViewById<TextView>(R.id.profileLevelBadge)
+        profileLevelBadge?.text = level.toString()
+
+        // Update streak count
+        val headerStreakCount = headerRoot.findViewById<TextView>(R.id.headerStreakCount)
+        headerStreakCount?.text = streak.toString()
+
+        Log.d(TAG, "Header updated - User: $userName, Level: $level, Streak: $streak")
+    }
+
+    /**
+     * Setup header for guest users
+     */
+    private fun setupGuestHeader() {
+        val headerRoot = findViewById<View>(R.id.dashboardHeaderRoot)
+
+        // Set guest welcome message
+        val welcomeText = headerRoot.findViewById<TextView>(R.id.welcomeText)
+        welcomeText?.text = "Welcome to TightBudget!"
+
+        // Set guest level and streak
+        val profileLevelBadge = headerRoot.findViewById<TextView>(R.id.profileLevelBadge)
+        profileLevelBadge?.text = "0"
+
+        val headerStreakCount = headerRoot.findViewById<TextView>(R.id.headerStreakCount)
+        headerStreakCount?.text = "0"
     }
 
     /**
@@ -185,8 +270,6 @@ class DashboardActivity : AppCompatActivity() {
      * Show/hide loading indicators
      */
     private fun showLoadingState(show: Boolean) {
-        // You can add loading indicators here if you have them in your layout
-        // For now, we'll just log the state
         Log.d(TAG, if (show) "Showing loading state" else "Hiding loading state")
     }
 
@@ -216,99 +299,6 @@ class DashboardActivity : AppCompatActivity() {
         val categoryContainer = root.findViewById<LinearLayout>(R.id.categoryContainer)
         if (categoryContainer != null && currentUserId != -1) {
             categoryContainer.removeAllViews()
-        }
-    }
-
-    /**
-     * Load user information using Firebase
-     */
-    private fun loadUserInformation() {
-        lifecycleScope.launch {
-            try {
-                val previousUserId = currentUserId
-                currentUserId = getCurrentUserId()
-
-                if (currentUserId != previousUserId) {
-                    clearFinancialDisplays()
-                }
-
-                if (currentUserId != -1) {
-                    // User is logged in - get user data from Firebase
-                    Log.d(TAG, "Loading user information from Firebase for user $currentUserId")
-
-                    val user = firebaseDataManager.getUserById(currentUserId)
-
-                    runOnUiThread {
-                        if (user != null) {
-                            // Set welcome message and balance
-                            welcomeTextView.text = "Welcome back, ${user.fullName}!"
-                            balanceAmountView.text = "R${String.format("%,.2f", user.balance)}"
-                            Log.d(TAG, "Loaded user from Firebase: ${user.fullName}")
-                        } else {
-                            // Try by email if user not found by ID
-                            val userEmail = intent.getStringExtra("USER_EMAIL")
-                            if (!userEmail.isNullOrEmpty()) {
-                                lifecycleScope.launch {
-                                    try {
-                                        val userByEmail = firebaseDataManager.getUserByEmail(userEmail)
-                                        if (userByEmail != null) {
-                                            runOnUiThread {
-                                                welcomeTextView.text = "Welcome back, ${userByEmail.fullName}!"
-                                                balanceAmountView.text = "R${String.format("%,.2f", userByEmail.balance)}"
-                                            }
-                                            // Save the user ID since we found them by email
-                                            saveUserSession(userByEmail.id)
-                                            currentUserId = userByEmail.id
-                                            Log.d(TAG, "Found user by email in Firebase: ${userByEmail.id}")
-                                            // Refresh financial data with newly found user ID
-                                            loadFinancialData()
-                                        } else {
-                                            runOnUiThread { showDefaultUserInfo() }
-                                        }
-                                    } catch (e: Exception) {
-                                        Log.e(TAG, "Error finding user by email in Firebase: ${e.message}", e)
-                                        runOnUiThread { showDefaultUserInfo() }
-                                    }
-                                }
-                            } else {
-                                showDefaultUserInfo()
-                            }
-                        }
-                    }
-                } else {
-                    // Try to find user by email from intent
-                    val userEmail = intent.getStringExtra("USER_EMAIL")
-                    if (!userEmail.isNullOrEmpty()) {
-                        val userByEmail = firebaseDataManager.getUserByEmail(userEmail)
-                        if (userByEmail != null) {
-                            runOnUiThread {
-                                welcomeTextView.text = "Welcome back, ${userByEmail.fullName}!"
-                                balanceAmountView.text = "R${String.format("%,.2f", userByEmail.balance)}"
-                            }
-                            saveUserSession(userByEmail.id)
-                            currentUserId = userByEmail.id
-                            Log.d(TAG, "Found and saved user from email: ${userByEmail.id}")
-                            loadFinancialData()
-                        } else {
-                            runOnUiThread { showDefaultUserInfo() }
-                        }
-                    } else {
-                        runOnUiThread { showDefaultUserInfo() }
-                    }
-                }
-
-                // Show placeholder data if user not logged in
-                if (currentUserId == -1) {
-                    runOnUiThread { showPlaceholderData() }
-                }
-
-            } catch (e: Exception) {
-                Log.e(TAG, "Error loading user information from Firebase: ${e.message}", e)
-                runOnUiThread {
-                    showDefaultUserInfo()
-                    showPlaceholderData()
-                }
-            }
         }
     }
 
@@ -957,34 +947,353 @@ class DashboardActivity : AppCompatActivity() {
     private fun setupNavigationButtons() {
         val root = findViewById<View>(R.id.dashboardMainCardsRoot)
 
-        root.findViewById<TextView>(R.id.manageBudgetButton).setOnClickListener {
+        root.findViewById<TextView>(R.id.manageBudgetButton)?.setOnClickListener {
             startActivity(Intent(this, BudgetGoalsActivity::class.java))
         }
 
-        root.findViewById<TextView>(R.id.seeAllTransactionsButton).setOnClickListener {
+        root.findViewById<TextView>(R.id.seeAllTransactionsButton)?.setOnClickListener {
             startActivity(Intent(this, TransactionsActivity::class.java))
         }
 
         root.findViewById<TextView>(R.id.viewAllSpendingButton)?.setOnClickListener {
             startActivity(Intent(this, CategorySpendingActivity::class.java))
         }
-
-        // Hide badges button (Gamification feature not implemented yet)
-        val allBadgesButton = root.findViewById<TextView>(R.id.allBadgesButton)
-        allBadgesButton?.visibility = View.GONE
     }
 
     /**
-     * Setup simple static placeholders for dashboard icons - no actual achievements yet
+     * Setup gamification components (replaces setupAchievementPlaceholders)
      */
-    private fun setupAchievementPlaceholders() {
+    private fun setupGamificationComponents() {
         val root = findViewById<View>(R.id.dashboardMainCardsRoot)
 
-        // Simply hide the achievement section for Part 2 (Gamification feature not implemented yet)
+        // Show the achievement section (remove the hiding)
         val achievementSection = root.findViewById<LinearLayout>(R.id.achievementsSection)
-        achievementSection?.visibility = View.GONE
+        achievementSection?.visibility = View.VISIBLE
+
+        // Show the challenges card
+        val challengesCard = root.findViewById<View>(R.id.cardChallenges)
+        challengesCard?.visibility = View.VISIBLE
+
+        // View all badges button
+        root.findViewById<TextView>(R.id.allBadgesButton)?.setOnClickListener {
+            startActivity(Intent(this, AchievementsActivity::class.java))
+        }
+
+        // View All Challenges button
+        root.findViewById<TextView>(R.id.viewAllChallengesButton)?.setOnClickListener {
+            val currentUserId = getCurrentUserId()
+            if (currentUserId == -1) {
+                Toast.makeText(this, "Please log in to view challenges", Toast.LENGTH_SHORT).show()
+            } else {
+                // Navigate to challenges (toast for now)
+                Toast.makeText(this, "Daily Challenges feature coming soon!", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Setup click listeners
+        setupGamificationClickListeners()
+
+        // Load real gamification data
+        loadGamificationData()
     }
 
+    /**
+     * Load real gamification data for dashboard components
+     */
+    private fun loadGamificationData() {
+        val currentUserId = getCurrentUserId()
+
+        if (currentUserId == -1) {
+            setupGuestGamificationState()
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                // Get real gamification data
+                val userProgress = gamificationManager.getUserProgress(currentUserId)
+                val userLevel = gamificationManager.calculateLevel(userProgress.totalPoints)
+
+                // Get today's challenges
+                val todaysChallenges = gamificationManager.getUserDailyChallenges(currentUserId)
+                val activeChallenges = todaysChallenges.filter {
+                    isToday(it.dateAssigned) && it.expiresAt > System.currentTimeMillis()
+                }
+
+                // If no challenges exist, generate new ones
+                val challenges = if (activeChallenges.isEmpty()) {
+                    gamificationManager.generateDailyChallenges(currentUserId)
+                } else {
+                    activeChallenges
+                }
+
+                // Calculate points earned today
+                val pointsEarnedToday = calculateTodaysPoints(currentUserId)
+
+                runOnUiThread {
+                    updateAchievementsComponent(userLevel, userProgress.totalPoints, userProgress.currentStreak, userProgress)
+                    updateChallengesComponent(challenges, pointsEarnedToday)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading gamification data: ${e.message}", e)
+                runOnUiThread {
+                    setupGuestGamificationState()
+                }
+            }
+        }
+    }
+
+    /**
+     * Update the achievements component card
+     */
+    private fun updateAchievementsComponent(level: Int, points: Int, streak: Int, userProgress: com.example.tightbudget.models.UserProgress) {
+        val root = findViewById<View>(R.id.dashboardMainCardsRoot)
+
+        // Update level, points, streak
+        root.findViewById<TextView>(R.id.dashboardUserLevel)?.text = level.toString()
+        root.findViewById<TextView>(R.id.dashboardUserPoints)?.text = points.toString()
+        root.findViewById<TextView>(R.id.dashboardUserStreak)?.text = streak.toString()
+
+        // Update achievement badges
+        val badges = listOf(
+            Triple("First Steps", "First Steps", userProgress.transactionCount >= 1),
+            Triple("Streak Master", "Streak Master", userProgress.longestStreak >= 7),
+            Triple("Point Collector", "Point Collector", userProgress.totalPoints >= 500),
+            Triple("Receipt Pro", "Receipt Pro", userProgress.receiptsUploaded >= 10)
+        )
+
+        updateDashboardBadges(badges)
+
+        Log.d(TAG, "Dashboard achievements updated - Level: $level, Points: $points, Streak: $streak")
+    }
+
+    /**
+     * Update dashboard badges display
+     */
+    private fun updateDashboardBadges(badges: List<Triple<String, String, Boolean>>) {
+        val root = findViewById<View>(R.id.dashboardMainCardsRoot)
+
+        val badgeViews = listOf(
+            Pair(root.findViewById<TextView>(R.id.saverBadgeIcon), root.findViewById<TextView>(R.id.saverBadgeLabel)),
+            Pair(root.findViewById<TextView>(R.id.consistentBadgeIcon), root.findViewById<TextView>(R.id.consistentBadgeLabel)),
+            Pair(root.findViewById<TextView>(R.id.transportBadgeIcon), root.findViewById<TextView>(R.id.transportBadgeLabel)),
+            Pair(root.findViewById<TextView>(R.id.lockedBadgeIcon), root.findViewById<TextView>(R.id.lockedBadgeLabel))
+        )
+
+        badges.forEachIndexed { i, badge ->
+            if (i < badgeViews.size) {
+                val (achievementId, displayName, earned) = badge
+                val (badgeIcon, badgeLabel) = badgeViews[i]
+
+                if (badgeIcon != null && badgeLabel != null) {
+                    // Set the emoji for the badge
+                    badgeIcon.text = EmojiUtils.getAchievementEmoji(achievementId)
+                    badgeLabel.text = displayName
+
+                    // Apply styling
+                    if (earned) {
+                        DrawableUtils.applyCircleBackground(
+                            badgeIcon,
+                            ContextCompat.getColor(this, R.color.teal_light)
+                        )
+                        badgeIcon.alpha = 1f
+                        badgeLabel.setTextColor(ContextCompat.getColor(this, R.color.text_dark))
+                    } else {
+                        DrawableUtils.applyCircleBackground(
+                            badgeIcon,
+                            ContextCompat.getColor(this, R.color.background_gray)
+                        )
+                        badgeIcon.alpha = 0.5f
+                        badgeLabel.setTextColor(ContextCompat.getColor(this, R.color.text_light))
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Update the challenges component card
+     */
+    private fun updateChallengesComponent(challenges: List<com.example.tightbudget.models.DailyChallenge>, pointsToday: Int) {
+        val root = findViewById<View>(R.id.dashboardMainCardsRoot)
+
+        // Update header
+        root.findViewById<TextView>(R.id.todayPointsEarned)?.text = "+$pointsToday pts today"
+
+        // Update progress summary
+        val completedCount = challenges.count { it.isCompleted }
+        val totalCount = challenges.size
+        val progressPercent = if (totalCount > 0) (completedCount * 100) / totalCount else 0
+        val totalPointsEarned = challenges.filter { it.isCompleted }.sumOf { it.pointsReward }
+
+        root.findViewById<TextView>(R.id.challengesSummaryText)?.text = "$completedCount of $totalCount challenges completed"
+        root.findViewById<ProgressBar>(R.id.challengesProgressBar)?.progress = progressPercent
+        root.findViewById<TextView>(R.id.challengesPointsTotal)?.text = "+$totalPointsEarned pts"
+
+        // Update individual challenges
+        updateChallengeItem(root, challenges.getOrNull(0), R.id.challenge1Checkbox, R.id.challenge1Text, R.id.challenge1Progress, true)
+        updateChallengeItem(root, challenges.getOrNull(1), R.id.challenge2Checkbox, R.id.challenge2Text, R.id.challenge2Progress, false)
+        updateChallengeItem(root, challenges.getOrNull(2), R.id.challenge3Checkbox, R.id.challenge3Text, R.id.challenge3Progress, false)
+
+        Log.d(TAG, "Dashboard challenges updated - Completed: $completedCount/$totalCount, Points: $totalPointsEarned")
+    }
+
+    /**
+     * Update individual challenge item
+     */
+    private fun updateChallengeItem(
+        root: View,
+        challenge: com.example.tightbudget.models.DailyChallenge?,
+        checkboxId: Int,
+        textId: Int,
+        progressId: Int,
+        showProgress: Boolean
+    ) {
+        val checkbox = root.findViewById<CheckBox>(checkboxId)
+        val text = root.findViewById<TextView>(textId)
+        val progress = root.findViewById<TextView>(progressId)
+
+        if (challenge != null) {
+            checkbox?.isChecked = challenge.isCompleted
+            text?.text = challenge.description
+
+            if (showProgress) {
+                val currentProgress = getCurrentChallengeProgress(challenge)
+                progress?.text = "$currentProgress/${challenge.targetValue}"
+            } else {
+                progress?.text = "+${challenge.pointsReward} pts"
+            }
+        } else {
+            checkbox?.isChecked = false
+            text?.text = "No more challenges today"
+            progress?.text = if (showProgress) "0/0" else "+0 pts"
+        }
+    }
+
+    /**
+     * Setup guest user gamification state for dashboard
+     */
+    private fun setupGuestGamificationState() {
+        val root = findViewById<View>(R.id.dashboardMainCardsRoot)
+
+        // Set guest values for achievements component
+        root.findViewById<TextView>(R.id.dashboardUserLevel)?.text = "0"
+        root.findViewById<TextView>(R.id.dashboardUserPoints)?.text = "0"
+        root.findViewById<TextView>(R.id.dashboardUserStreak)?.text = "0"
+
+        // Set guest values for challenges component
+        root.findViewById<TextView>(R.id.todayPointsEarned)?.text = "+0 pts today"
+        root.findViewById<TextView>(R.id.challengesSummaryText)?.text = "Log in to see challenges"
+        root.findViewById<ProgressBar>(R.id.challengesProgressBar)?.progress = 0
+        root.findViewById<TextView>(R.id.challengesPointsTotal)?.text = "+0 pts"
+
+        // Set guest challenge items
+        root.findViewById<CheckBox>(R.id.challenge1Checkbox)?.isChecked = false
+        root.findViewById<TextView>(R.id.challenge1Text)?.text = "Create account to unlock challenges"
+        root.findViewById<TextView>(R.id.challenge1Progress)?.text = "0/0"
+
+        root.findViewById<CheckBox>(R.id.challenge2Checkbox)?.isChecked = false
+        root.findViewById<TextView>(R.id.challenge2Text)?.text = "Log in to start earning points"
+        root.findViewById<TextView>(R.id.challenge2Progress)?.text = "+0 pts"
+
+        root.findViewById<CheckBox>(R.id.challenge3Checkbox)?.isChecked = false
+        root.findViewById<TextView>(R.id.challenge3Text)?.text = "Sign up to track your progress"
+        root.findViewById<TextView>(R.id.challenge3Progress)?.text = "+0 pts"
+
+        // Set guest badges
+        val guestBadges = listOf(
+            Triple("Locked", "Locked", false),
+            Triple("Locked", "Locked", false),
+            Triple("Locked", "Locked", false),
+            Triple("Locked", "Locked", false)
+        )
+        updateDashboardBadges(guestBadges)
+    }
+
+    /**
+     * Setup click listeners for gamification elements
+     */
+    private fun setupGamificationClickListeners() {
+        val root = findViewById<View>(R.id.dashboardMainCardsRoot)
+
+        // View Profile button (in achievements component)
+        root.findViewById<TextView>(R.id.allBadgesButton)?.setOnClickListener {
+            startActivity(Intent(this, ProfileActivity::class.java))
+        }
+
+        // View All Challenges button
+        root.findViewById<TextView>(R.id.viewAllChallengesButton)?.setOnClickListener {
+            val currentUserId = getCurrentUserId()
+            if (currentUserId == -1) {
+                Toast.makeText(this, "Please log in to view challenges", Toast.LENGTH_SHORT).show()
+            } else {
+                // Navigate to challenges or show toast for now
+                Toast.makeText(this, "Daily Challenges feature coming soon!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /**
+     * Calculate points earned today (simplified estimation)
+     */
+    private suspend fun calculateTodaysPoints(userId: Int): Int {
+        return try {
+            val todayStart = java.util.Calendar.getInstance().apply {
+                set(java.util.Calendar.HOUR_OF_DAY, 0)
+                set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }
+
+            val transactions = firebaseDataManager.getAllTransactionsForUser(userId)
+            val todayTransactions = transactions.filter { transaction ->
+                transaction.dateTimestamp >= todayStart.timeInMillis
+            }
+
+            // Estimate points: 10 per transaction + 15 for receipts
+            var points = todayTransactions.size * 10
+            points += todayTransactions.count { !it.receiptPath.isNullOrEmpty() } * 15
+
+            points
+        } catch (e: Exception) {
+            Log.e(TAG, "Error calculating today's points: ${e.message}", e)
+            0
+        }
+    }
+
+    /**
+     * Get current progress for a challenge (simplified)
+     */
+    private fun getCurrentChallengeProgress(challenge: com.example.tightbudget.models.DailyChallenge): Int {
+        // Simplified progress calculation
+        return if (challenge.isCompleted) challenge.targetValue else kotlin.random.Random.nextInt(0, challenge.targetValue)
+    }
+
+    /**
+     * Check if timestamp is today
+     */
+    private fun isToday(timestamp: Long): Boolean {
+        val today = java.util.Calendar.getInstance()
+        val checkDate = java.util.Calendar.getInstance().apply { timeInMillis = timestamp }
+
+        return today.get(java.util.Calendar.YEAR) == checkDate.get(java.util.Calendar.YEAR) &&
+                today.get(java.util.Calendar.DAY_OF_YEAR) == checkDate.get(java.util.Calendar.DAY_OF_YEAR)
+    }
+
+    // Extension property to convert Int to dp
     private val Int.dp: Int
-        get() = (this * resources.displayMetrics.density).toInt()
+        get() = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            this.toFloat(),
+            resources.displayMetrics
+        ).toInt()
+
+    // Extension function to set margins for a View
+    private fun View.setMargins(left: Int, top: Int, right: Int, bottom: Int) {
+        if (this.layoutParams is ViewGroup.MarginLayoutParams) {
+            val p = this.layoutParams as ViewGroup.MarginLayoutParams
+            p.setMargins(left, top, right, bottom)
+            this.requestLayout()
+        }
+    }
 }
