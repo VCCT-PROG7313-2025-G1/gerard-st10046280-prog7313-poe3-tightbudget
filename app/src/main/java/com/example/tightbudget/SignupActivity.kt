@@ -1,5 +1,6 @@
 package com.example.tightbudget
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -102,12 +103,29 @@ class SignupActivity : AppCompatActivity() {
         // Guest login
         binding.guestLoginText.setOnClickListener {
             Log.d(TAG, "Continue as guest clicked")
-            // Navigate to dashboard activity without login
+            // Clear any existing user session to ensure guest mode
+            clearUserSession()
+            // Navigate to dashboard activity in guest mode
             Intent(this, DashboardActivity::class.java).also {
                 startActivity(it)
                 finish()
             }
         }
+    }
+
+    /**
+     * Clear user session to ensure guest mode
+     * This method ensures guest users don't see previous user's data
+     */
+    private fun clearUserSession() {
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        sharedPreferences.edit().apply {
+            remove("current_user_id")
+            remove("is_logged_in")
+            remove("remember_me")
+            apply()
+        }
+        Log.d(TAG, "Cleared user session for guest mode")
     }
 
     private fun setupTextWatchers() {
@@ -207,11 +225,11 @@ class SignupActivity : AppCompatActivity() {
 
     private fun createAccount() {
         val fullName = binding.fullNameInput.text.toString().trim()
-        val email = binding.emailInput.text.toString().trim().toLowerCase(Locale.ROOT)
+        val email = binding.emailInput.text.toString().trim()
         val password = binding.passwordInput.text.toString()
         val confirmPassword = binding.confirmPasswordInput.text.toString()
 
-        // Validation checks
+        // Validation
         if (fullName.isEmpty()) {
             Toast.makeText(this, "Please enter your full name", Toast.LENGTH_SHORT).show()
             return
@@ -259,6 +277,9 @@ class SignupActivity : AppCompatActivity() {
                 Log.d(TAG, "User created successfully in Firebase with ID: ${createdUser.id}")
 
                 runOnUiThread {
+                    // IMPORTANT FIX: Save the user session for the newly created user
+                    saveUserSession(createdUser.id)
+
                     Toast.makeText(
                         this@SignupActivity,
                         "Account created successfully!",
@@ -268,6 +289,7 @@ class SignupActivity : AppCompatActivity() {
                     // Navigate to success screen
                     val intent = Intent(this@SignupActivity, SuccessActivity::class.java)
                     intent.putExtra("USER_EMAIL", email)
+                    intent.putExtra("USER_ID", createdUser.id) // Pass the user ID
                     startActivity(intent)
                     finish()
                 }
@@ -293,6 +315,19 @@ class SignupActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    /**
+     * Save user session to SharedPreferences
+     */
+    private fun saveUserSession(userId: Int) {
+        val sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE)
+        sharedPreferences.edit().apply {
+            putInt("current_user_id", userId)
+            putBoolean("is_logged_in", true)
+            apply()
+        }
+        Log.d(TAG, "Saved user session for newly created user with ID: $userId")
     }
 }
 

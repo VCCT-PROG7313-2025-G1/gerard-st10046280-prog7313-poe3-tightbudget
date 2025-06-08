@@ -83,12 +83,29 @@ class LoginActivity : AppCompatActivity() {
         /// Guest login
         binding.guestLoginText.setOnClickListener {
             Log.d(TAG, "Continue as guest clicked")
-            // Navigate to dashboard activity
+            // Clear any existing user session to ensure guest mode
+            clearUserSession()
+            // Navigate to dashboard activity in guest mode
             Intent(this, DashboardActivity::class.java).also {
                 startActivity(it)
-                finish() // Optional: Close the current activity
+                finish()
             }
         }
+    }
+
+    /**
+     * Clear user session to ensure guest mode
+     * This method ensures guest users don't see previous user's data
+     */
+    private fun clearUserSession() {
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        sharedPreferences.edit().apply {
+            remove("current_user_id")
+            remove("is_logged_in")
+            remove("remember_me")
+            apply()
+        }
+        Log.d(TAG, "Cleared user session for guest mode")
     }
 
     // Function to toggle the checkbox state

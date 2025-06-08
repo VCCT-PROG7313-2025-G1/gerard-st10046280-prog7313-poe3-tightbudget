@@ -3,6 +3,7 @@ package com.example.tightbudget
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.example.tightbudget.databinding.ActivitySuccessBinding
 import com.example.tightbudget.utils.DrawableUtils
@@ -52,10 +53,29 @@ class SuccessActivity : AppCompatActivity() {
             findViewById<KonfettiView>(R.id.konfettiView).start(finalParty)
 
             binding.continueToDashboardButton.postDelayed({
+                // Ensure user session is properly set before navigating
+                val userId = intent.getIntExtra("USER_ID", -1)
+                if (userId != -1) {
+                    // Double-check that user session is saved
+                    val sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE)
+                    val currentUserId = sharedPreferences.getInt("current_user_id", -1)
+
+                    if (currentUserId != userId) {
+                        // If for some reason the session wasn't saved, save it now
+                        sharedPreferences.edit().apply {
+                            putInt("current_user_id", userId)
+                            putBoolean("is_logged_in", true)
+                            apply()
+                        }
+                        Log.d("SuccessActivity", "Fixed user session - set current_user_id to: $userId")
+                    }
+                }
+
                 val intent = Intent(this, DashboardActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
-            }, 800)
+                finish()
+            }, 1000)
         }
 
         binding.resendEmailText.setOnClickListener {
