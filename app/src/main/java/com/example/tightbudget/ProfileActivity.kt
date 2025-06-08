@@ -230,28 +230,51 @@ class ProfileActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // Get real achievement data
+                Log.d(TAG, "=== LOADING ACHIEVEMENT BADGES ===")
+
+                // Get real achievement data from gamification system
+                val allAchievements = gamificationManager.getAllAchievements()
                 val userProgress = gamificationManager.getUserProgress(userId)
 
-                // Check which achievements are unlocked with real names
-                val badges = listOf(
-                    Triple("First Steps", "First Steps", userProgress.transactionCount >= 1),
-                    Triple("Streak Master", "Streak Master", userProgress.longestStreak >= 7),
-                    Triple("Point Collector", "Point Collector", userProgress.totalPoints >= 500),
-                    Triple("Receipt Pro", "Receipt Pro", userProgress.receiptsUploaded >= 10)
-                )
+                Log.d(TAG, "All achievements count: ${allAchievements.size}")
+                Log.d(TAG, "User unlocked achievements: ${userProgress.achievementsUnlocked}")
+
+                // Filter to get the first 4 achievements to display
+                val achievementsToDisplay = allAchievements.take(4)
+
+                // Create badge data using REAL unlock status
+                val badges = achievementsToDisplay.map { achievement ->
+                    val isUnlocked = userProgress.achievementsUnlocked.contains(achievement.id)
+                    Log.d(TAG, "Achievement ${achievement.id} (${achievement.title}): unlocked = $isUnlocked")
+
+                    Triple(
+                        achievement.emoji,        // Use emoji directly
+                        achievement.title,       // Real achievement title
+                        isUnlocked              // Real unlock status from database
+                    )
+                }
+
+                // If we have fewer than 4 achievements, pad with locked badges
+                val paddedBadges = badges.toMutableList()
+                while (paddedBadges.size < 4) {
+                    paddedBadges.add(Triple("🔒", "Locked", false))
+                }
+
+                Log.d(TAG, "Final badges to display: $paddedBadges")
 
                 runOnUiThread {
-                    displayBadges(badges)
+                    displayBadges(paddedBadges)
                 }
+
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading achievements: ${e.message}", e)
+                Log.e(TAG, "Error loading achievement badges: ${e.message}", e)
                 runOnUiThread {
+                    // Fallback to default badges on error
                     val defaultBadges = listOf(
-                        Triple("Saver", "Saver", true),
-                        Triple("Consistent", "Consistent", false),
-                        Triple("Transport", "Transport", false),
-                        Triple("Locked", "Locked", false)
+                        Triple("🎯", "First Steps", false),
+                        Triple("📝", "Getting Started", false),
+                        Triple("📄", "Receipt Rookie", false),
+                        Triple("🔒", "Locked", false)
                     )
                     displayBadges(defaultBadges)
                 }
@@ -272,33 +295,41 @@ class ProfileActivity : AppCompatActivity() {
 
         badges.forEachIndexed { i, badge ->
             if (i < badgeViews.size) {
-                val (achievementId, displayName, earned) = badge
+                val (emoji, displayName, earned) = badge
                 val (badgeIcon, badgeLabel) = badgeViews[i]
 
-                // Set the emoji for the badge
-                badgeIcon.text = EmojiUtils.getAchievementEmoji(achievementId)
+                // Set the emoji directly
+                badgeIcon.text = emoji
+
+                // Set the label to real achievement title
                 badgeLabel.text = displayName
 
-                // Apply background and styling
+                // Apply background and styling based on REAL unlock status
                 if (earned) {
+                    // Unlocked badge styling
                     DrawableUtils.applyCircleBackground(
                         badgeIcon,
                         ContextCompat.getColor(this, R.color.teal_light)
                     )
                     badgeIcon.alpha = 1f
                     badgeLabel.setTextColor(ContextCompat.getColor(this, R.color.text_dark))
+
+                    Log.d(TAG, "✅ Badge $displayName displayed as UNLOCKED")
                 } else {
+                    // Locked badge styling
                     DrawableUtils.applyCircleBackground(
                         badgeIcon,
                         ContextCompat.getColor(this, R.color.background_gray)
                     )
                     badgeIcon.alpha = 0.5f
                     badgeLabel.setTextColor(ContextCompat.getColor(this, R.color.text_light))
+
+                    Log.d(TAG, "🔒 Badge $displayName displayed as LOCKED")
                 }
             }
         }
 
-        // Set up click listener for "All Badges"
+        // Set up click listener for "All Badges" button
         binding.allBadgesButton.setOnClickListener {
             startActivity(Intent(this, AchievementsActivity::class.java))
         }

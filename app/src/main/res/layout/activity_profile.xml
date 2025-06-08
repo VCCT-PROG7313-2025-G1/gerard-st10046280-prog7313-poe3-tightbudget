@@ -224,7 +224,9 @@
                         android:textColor="@color/primary_purple_light"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:layout_alignParentEnd="true" />
+                        android:layout_alignParentEnd="true"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="8dp" />
                 </RelativeLayout>
 
                 <!-- Badge row -->
@@ -241,7 +243,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:padding="8dp">
 
                         <TextView
                             android:id="@+id/saverBadgeIcon"
@@ -260,7 +263,10 @@
                             android:text="Loading..."
                             android:textColor="@color/text_medium"
                             android:textSize="12sp"
-                            android:layout_marginTop="4dp" />
+                            android:layout_marginTop="6dp"
+                            android:textAlignment="center"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
                     </LinearLayout>
 
                     <!-- Badge 2 - Dynamic -->
@@ -269,7 +275,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:padding="8dp">
 
                         <TextView
                             android:id="@+id/consistentBadgeIcon"
@@ -288,7 +295,10 @@
                             android:text="Loading..."
                             android:textColor="@color/text_medium"
                             android:textSize="12sp"
-                            android:layout_marginTop="4dp" />
+                            android:layout_marginTop="6dp"
+                            android:textAlignment="center"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
                     </LinearLayout>
 
                     <!-- Badge 3 - Dynamic -->
@@ -297,7 +307,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:padding="8dp">
 
                         <TextView
                             android:id="@+id/transportBadgeIcon"
@@ -316,7 +327,10 @@
                             android:text="Loading..."
                             android:textColor="@color/text_medium"
                             android:textSize="12sp"
-                            android:layout_marginTop="4dp" />
+                            android:layout_marginTop="6dp"
+                            android:textAlignment="center"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
                     </LinearLayout>
 
                     <!-- Badge 4 - Dynamic -->
@@ -325,7 +339,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical"
-                        android:gravity="center">
+                        android:gravity="center"
+                        android:padding="8dp">
 
                         <TextView
                             android:id="@+id/lockedBadgeIcon"
@@ -344,7 +359,10 @@
                             android:text="Loading..."
                             android:textColor="@color/text_light"
                             android:textSize="12sp"
-                            android:layout_marginTop="4dp" />
+                            android:layout_marginTop="6dp"
+                            android:textAlignment="center"
+                            android:maxLines="2"
+                            android:ellipsize="end" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
