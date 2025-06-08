@@ -3,15 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
-    app:cardCornerRadius="10dp"
-    app:cardElevation="2dp">
+    android:layout_marginBottom="6dp"
+    android:layout_marginHorizontal="2dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="3dp"
+    android:foreground="?attr/selectableItemBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="12dp">
 
         <!-- Top Row with Category Info -->
         <LinearLayout
@@ -20,85 +22,202 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- Category Icon/Emoji -->
-            <TextView
-                android:id="@+id/categoryEmoji"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/rounded_button"
-                android:text="🍔"
-                android:textSize="20sp"
-                android:gravity="center" />
+            <!-- Enhanced Category Icon with gradient background -->
+            <FrameLayout
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/button_gradient"
+                android:backgroundTint="@color/teal_light"
+                android:elevation="2dp">
 
-            <!-- Category Name and Progress Info -->
+                <TextView
+                    android:id="@+id/categoryEmoji"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="🍔"
+                    android:textSize="22sp"
+                    android:gravity="center"
+                    android:layout_gravity="center" />
+            </FrameLayout>
+
+            <!-- Category Name and Progress Info with improved spacing -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:layout_marginStart="16dp">
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="8dp">
 
                 <TextView
                     android:id="@+id/categoryName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Food"
-                    android:textSize="16sp"
+                    android:textSize="15sp"
                     android:textStyle="bold"
-                    android:textColor="@color/text_dark" />
+                    android:textColor="@color/text_dark"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
 
                 <TextView
                     android:id="@+id/progressText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="R0.00 / R0.00 (0%)"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_light" />
+                    android:textSize="11sp"
+                    android:textColor="@color/text_medium"
+                    android:layout_marginTop="2dp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
             </LinearLayout>
 
-            <!-- Amount -->
-            <TextView
-                android:id="@+id/categoryAmount"
+            <!-- Amount with better styling -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="R0.00"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_dark" />
+                android:orientation="vertical"
+                android:gravity="end">
+
+                <TextView
+                    android:id="@+id/categoryAmount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="R0.00"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary_purple_light" />
+
+                <TextView
+                    android:id="@+id/percentageText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="25% of total"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_light"
+                    android:layout_marginTop="1dp" />
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- Progress Bar -->
-        <ProgressBar
-            android:id="@+id/categoryProgressBar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="6dp"
-            android:layout_marginTop="8dp"
-            android:progressBackgroundTint="@color/background_gray" />
-
-        <!-- Transaction Count -->
+        <!-- Enhanced Progress Bar with rounded corners -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical">
+
+            <ProgressBar
+                android:id="@+id/categoryProgressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="8dp"
+                android:progressBackgroundTint="@color/gray_light"
+                android:progressTint="@color/teal_light"
+                android:progress="0"
+                android:max="100" />
 
             <TextView
-                android:id="@+id/transactionCountText"
+                android:id="@+id/budgetStatusIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✅"
+                android:textSize="14sp"
+                android:layout_marginStart="8dp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Bottom Row with enhanced styling -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical">
+
+            <!-- Transaction count with icon -->
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="0 transactions"
-                android:textSize="12sp"
-                android:textColor="@color/text_light" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/viewDetailsText"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📝"
+                    android:textSize="12sp"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:id="@+id/transactionCountText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 transactions"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_medium" />
+            </LinearLayout>
+
+            <!-- View Details button with arrow -->
+            <LinearLayout
+                android:id="@+id/viewDetailsLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="View Details"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="4dp">
+
+                <TextView
+                    android:id="@+id/viewDetailsText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="View Details"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary_purple_light" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="→"
+                    android:textSize="12sp"
+                    android:textColor="@color/primary_purple_light"
+                    android:layout_marginStart="4dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Optional: Budget warning strip -->
+        <LinearLayout
+            android:id="@+id/budgetWarningStrip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/rounded_button"
+            android:backgroundTint="#FFF3E0"
+            android:padding="6dp"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⚠️"
                 android:textSize="12sp"
-                android:textColor="@color/primary_purple_light" />
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/budgetWarningText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Over budget by R50.00"
+                android:textSize="11sp"
+                android:textColor="@color/text_dark"
+                android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>
