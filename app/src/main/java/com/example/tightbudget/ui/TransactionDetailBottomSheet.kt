@@ -13,7 +13,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.tightbudget.R
 import com.example.tightbudget.databinding.FragmentTransactionDetailBinding
+import com.example.tightbudget.firebase.FirebaseCategoryManager
 import com.example.tightbudget.firebase.FirebaseDataManager
+import com.example.tightbudget.models.Category
 import com.example.tightbudget.models.Transaction
 import com.example.tightbudget.utils.DrawableUtils
 import com.example.tightbudget.utils.EmojiUtils
@@ -38,6 +40,10 @@ class TransactionDetailBottomSheet : BottomSheetDialogFragment() {
     private lateinit var transaction: Transaction
     private lateinit var firebaseDataManager: FirebaseDataManager
     private val TAG = "TransactionDetail"
+
+    // Category manager and loaded categories
+    private lateinit var firebaseCategoryManager: FirebaseCategoryManager
+    private var loadedCategories: List<Category> = emptyList()
 
     /**
      * Called when the bottom sheet dialog is created.
@@ -68,10 +74,16 @@ class TransactionDetailBottomSheet : BottomSheetDialogFragment() {
         // Initialize Firebase data manager
         firebaseDataManager = FirebaseDataManager.getInstance()
 
+        // Initialize category manager
+        firebaseCategoryManager = FirebaseCategoryManager.getInstance()
+
         // Retrieve the transaction object passed in via arguments
         arguments?.let {
             transaction = it.getParcelable("transaction")!!
         }
+
+        // Load categories for emoji lookup
+        loadCategoriesForEmoji()
     }
 
     override fun onCreateView(
@@ -89,8 +101,8 @@ class TransactionDetailBottomSheet : BottomSheetDialogFragment() {
         // Apply white circular background
         DrawableUtils.applyWhiteCircleBackground(binding.detailEmoji, requireContext())
 
-        // Set the emoji based on category
-        binding.detailEmoji.text = EmojiUtils.getCategoryEmoji(transaction.category)
+        // Set the emoji based on real category data
+        setupTransactionEmoji()
 
         // Fill in details
         binding.detailMerchant.text = transaction.merchant
@@ -119,6 +131,45 @@ class TransactionDetailBottomSheet : BottomSheetDialogFragment() {
 
         // Set up button click listeners
         setupButtons()
+    }
+
+    /**
+     * Load categories for emoji lookup
+     */
+    private fun loadCategoriesForEmoji() {
+        lifecycleScope.launch {
+            try {
+                loadedCategories = firebaseCategoryManager.getAllCategories()
+                // Update emoji if view is already created
+                if (true) {
+                    requireActivity().runOnUiThread {
+                        setupTransactionEmoji()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("TransactionDetail", "Error loading categories: ${e.message}")
+                // Will fallback to EmojiUtils
+            }
+        }
+    }
+
+    /**
+     * Setup transaction emoji with real category data
+     */
+    private fun setupTransactionEmoji() {
+        binding.detailEmoji.text = getCategoryEmojiFromData(transaction.category)
+    }
+
+    /**
+     * Get category emoji from loaded data or fallback
+     */
+    private fun getCategoryEmojiFromData(categoryName: String): String {
+        val category = loadedCategories.find { it.name.equals(categoryName, ignoreCase = true) }
+        return if (category != null && category.emoji.isNotBlank()) {
+            category.emoji // Use real stored emoji
+        } else {
+            EmojiUtils.getCategoryEmoji(categoryName) // Fallback to hardcoded
+        }
     }
 
     /**

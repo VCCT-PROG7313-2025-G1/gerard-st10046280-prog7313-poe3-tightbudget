@@ -1,15 +1,20 @@
 package com.example.tightbudget.ui
 
+import android.content.ContentValues.TAG
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.tightbudget.adapters.CategoryAdapter
 import com.example.tightbudget.databinding.FragmentCategoryPickerBinding
+import com.example.tightbudget.firebase.FirebaseCategoryManager
 import com.example.tightbudget.models.CategoryItem
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.coroutines.launch
 
 /**
  * A BottomSheetDialogFragment that displays a list of categories for selection.
@@ -32,6 +37,9 @@ class CategoryPickerBottomSheet(
     // Adapter for displaying the list of categories
     private lateinit var adapter: CategoryAdapter
 
+    // ADDED: Firebase manager for loading real categories
+    private lateinit var firebaseCategoryManager: FirebaseCategoryManager
+
     /**
      * Inflates the layout for the bottom sheet and initializes the binding object.
      */
@@ -50,6 +58,9 @@ class CategoryPickerBottomSheet(
      */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Initialize Firebase manager
+        firebaseCategoryManager = FirebaseCategoryManager.getInstance()
 
         // Log the categories passed to the constructor for debugging purposes
         Log.d("CategoryPicker", "Categories: $categoryList")
@@ -72,6 +83,114 @@ class CategoryPickerBottomSheet(
             onCreateNewClicked() // Invoke the callback for creating a new category
             dismiss() // Close the bottom sheet
         }
+
+        loadCategoriesFromFirebase()
+    }
+
+    /**
+     * Load categories from Firebase with real emojis
+     */
+    private fun loadCategoriesFromFirebase() {
+        lifecycleScope.launch {
+            try {
+                Log.d(TAG, "Loading categories from Firebase...")
+
+                val categories = firebaseCategoryManager.getAllCategories()
+                Log.d(TAG, "Loaded ${categories.size} categories from Firebase")
+
+                // Convert Firebase categories to CategoryItem with REAL emoji data
+                val categoryItems = categories.map { category ->
+                    Log.d(TAG, "Category: ${category.name}, Emoji: ${category.emoji}")
+                    CategoryItem(
+                        name = category.name,
+                        emoji = category.emoji,  // Use the REAL stored emoji (not EmojiUtils!)
+                        color = category.color,
+                        budget = category.budget
+                    )
+                }.sortedBy { it.name } // Sort alphabetically for better UX
+
+                // FIXED: Use requireActivity().runOnUiThread for fragments
+                requireActivity().runOnUiThread {
+                    if (categoryItems.isNotEmpty()) {
+                        adapter.updateCategories(categoryItems)
+
+                        // Only set visibility if these views exist in your layout
+                        try {
+                        } catch (e: Exception) {
+                            // Loading progress bar doesn't exist, skip
+                        }
+
+                        binding.categoryRecyclerView.visibility = View.VISIBLE
+
+                        try {
+                        } catch (e: Exception) {
+                            // Empty state layout doesn't exist, skip
+                        }
+
+                        Log.d(TAG, "Successfully updated category list with ${categoryItems.size} items")
+                    } else {
+                        // Show empty state if no categories found
+                        showEmptyState()
+                    }
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading categories from Firebase: ${e.message}", e)
+                requireActivity().runOnUiThread {
+                    // Show error state or fallback to predefined categories
+                    showErrorState()
+                }
+            }
+        }
+    }
+
+    /**
+     * Show empty state when no categories are found
+     * Added error handling for missing views
+     */
+    private fun showEmptyState() {
+        try {
+        } catch (e: Exception) {
+            // Loading progress bar doesn't exist
+        }
+
+        binding.categoryRecyclerView.visibility = View.GONE
+
+        try {
+        } catch (e: Exception) {
+            // Empty state layout doesn't exist, show toast instead
+            Toast.makeText(requireContext(), "No categories found", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Show error state and load fallback categories
+     * Uses the original categoryList as fallback
+     */
+    private fun showErrorState() {
+        Log.d(TAG, "Loading fallback categories due to Firebase error")
+
+        // Uses the original categoryList passed to constructor as fallback
+        adapter.updateCategories(categoryList)
+
+        try {
+        } catch (e: Exception) {
+            // Loading progress bar doesn't exist
+        }
+
+        binding.categoryRecyclerView.visibility = View.VISIBLE
+
+        try {
+        } catch (e: Exception) {
+            // Empty state layout doesn't exist
+        }
+
+        // Show a toast to inform user
+        Toast.makeText(
+            requireContext(),
+            "Using offline categories (connection issue)",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     /**

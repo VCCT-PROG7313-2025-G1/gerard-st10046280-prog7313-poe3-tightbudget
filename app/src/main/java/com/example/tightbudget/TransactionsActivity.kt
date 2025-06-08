@@ -29,6 +29,7 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.SearchView
+import com.example.tightbudget.firebase.FirebaseCategoryManager
 
 /**
  * Activity that displays a scrollable list of all transactions (expenses and income).
@@ -123,6 +124,9 @@ class TransactionsActivity : AppCompatActivity() {
 
         // Load transactions for current user
         loadUserTransactions()
+
+        // Load categories for the adapter
+        loadCategoriesForAdapter()
     }
 
     private fun setupHeader() {
@@ -133,6 +137,28 @@ class TransactionsActivity : AppCompatActivity() {
 
         // Center the title text
         binding.headerTitle.gravity = android.view.Gravity.CENTER
+    }
+
+    /**
+     * Load categories and update adapter with real emoji data
+     */
+    private fun loadCategoriesForAdapter() {
+        lifecycleScope.launch {
+            try {
+                val categoryManager = FirebaseCategoryManager.getInstance()
+                val categories = categoryManager.getAllCategories()
+
+                // Update the adapter with category data
+                runOnUiThread {
+                    if (::transactionAdapter.isInitialized) {
+                        transactionAdapter.updateCategories(categories)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading categories for adapter: ${e.message}")
+                // Adapter will fall back to EmojiUtils
+            }
+        }
     }
 
     private fun setupSearchIcon() {
