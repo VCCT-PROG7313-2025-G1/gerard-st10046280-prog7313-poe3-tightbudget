@@ -4,15 +4,33 @@ package com.example.tightbudget.models
  * Represents a daily challenge for users
  */
 data class DailyChallenge(
-    var id: String = "",
-    var title: String = "",
-    var description: String = "",
-    var pointsReward: Int = 0,
-    var type: ChallengeType = ChallengeType.TRANSACTION,
-    var targetValue: Int = 1, // Number of transactions, days under budget, etc.
-    var isCompleted: Boolean = false,
-    var dateAssigned: Long = System.currentTimeMillis(),
-    var expiresAt: Long = System.currentTimeMillis() + (24 * 60 * 60 * 1000) // 24 hours
+    val id: String = "",
+    val title: String = "",
+    val description: String = "",
+    val pointsReward: Int = 0,
+    val type: ChallengeType = ChallengeType.TRANSACTION,
+    val targetValue: Int = 0,
+    val currentProgress: Int = 0,
+    val isCompleted: Boolean = false,
+    val dateAssigned: Long = 0L,
+    val expiresAt: Long = 0L
 ) {
-    constructor() : this("", "", "", 0, ChallengeType.TRANSACTION, 1, false, System.currentTimeMillis(), System.currentTimeMillis() + (24 * 60 * 60 * 1000))
+    // No-argument constructor for Firebase
+    constructor() : this("", "", "", 0, ChallengeType.TRANSACTION, 0, 0, false, 0L, 0L)
+
+    /**
+     * Get progress percentage for UI display
+     */
+    fun getProgressPercentage(): Int {
+        return if (targetValue > 0) {
+            minOf(100, (currentProgress * 100) / targetValue)
+        } else 0
+    }
+
+    /**
+     * Get progress text for UI display
+     */
+    fun getProgressText(): String {
+        return "$currentProgress/$targetValue"
+    }
 }

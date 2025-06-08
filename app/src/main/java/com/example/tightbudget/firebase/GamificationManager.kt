@@ -1,5 +1,6 @@
 package com.example.tightbudget.firebase
 
+import android.text.format.DateUtils.isToday
 import android.util.Log
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -194,25 +195,42 @@ class GamificationManager {
     }
 
     /**
-     * Check and update challenge progress
+     * Update challenge progress and mark as completed if target is reached
      */
-    suspend fun updateChallengeProgress(userId: Int, challengeType: ChallengeType) {
+    private suspend fun updateChallengeProgress(userId: Int, challengeType: ChallengeType) {
         try {
-            val challenges = getUserDailyChallenges(userId)
-            val relevantChallenges = challenges.filter {
-                it.type == challengeType && !it.isCompleted && it.expiresAt > System.currentTimeMillis()
+            Log.d(TAG, "Updating challenge progress for type: $challengeType")
+
+            val userChallenges = getUserDailyChallenges(userId)
+            val todaysChallenges = userChallenges.filter {
+                isToday(it.dateAssigned) && !it.isCompleted
             }
 
-            relevantChallenges.forEach { challenge ->
-                val currentProgress = getCurrentChallengeProgress(userId, challenge)
+            for (challenge in todaysChallenges) {
+                if (challenge.type == challengeType) {
+                    val currentProgress = getCurrentChallengeProgress(challenge.type, userId)
 
-                if (currentProgress >= challenge.targetValue) {
-                    // Complete the challenge
-                    val completedChallenge = challenge.copy(isCompleted = true)
-                    saveDailyChallenge(userId, completedChallenge)
+                    // Check if challenge should be completed
+                    if (currentProgress >= challenge.targetValue && !challenge.isCompleted) {
+                        val completedChallenge = challenge.copy(
+                            isCompleted = true,
+                            currentProgress = currentProgress
+                        )
 
-                    // Award points
-                    awardPoints(userId, challenge.pointsReward, "Completed daily challenge: ${challenge.title}")
+                        // Save completed challenge
+                        saveDailyChallenge(userId, completedChallenge)
+
+                        // Award challenge completion points
+                        awardPoints(userId, challenge.pointsReward, "Completed challenge: ${challenge.title}")
+
+                        Log.d(TAG, "✅ Challenge completed: ${challenge.title} (+${challenge.pointsReward} points)")
+                    } else {
+                        // Update progress without completing
+                        val updatedChallenge = challenge.copy(currentProgress = currentProgress)
+                        saveDailyChallenge(userId, updatedChallenge)
+
+                        Log.d(TAG, "📊 Challenge progress updated: ${challenge.title} ($currentProgress/${challenge.targetValue})")
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -221,16 +239,49 @@ class GamificationManager {
     }
 
     /**
-     * Get current progress for a specific challenge
+     * Get actual current progress for a challenge type
      */
-    private suspend fun getCurrentChallengeProgress(userId: Int, challenge: DailyChallenge): Int {
-        return when (challenge.type) {
+    private suspend fun getCurrentChallengeProgress(challengeType: ChallengeType, userId: Int): Int {
+        return when (challengeType) {
             ChallengeType.TRANSACTION -> getTodayTransactionCount(userId)
             ChallengeType.RECEIPT -> getTodayReceiptCount(userId)
-            ChallengeType.BUDGET_COMPLIANCE -> getTodayBudgetComplianceCount(userId)
+            ChallengeType.BUDGET_COMPLIANCE -> {
+                // Check if user stayed within budget today
+                val budgetManager = FirebaseBudgetManager.getInstance()
+                val activeBudget = budgetManager.getActiveBudgetGoal(userId)
+                if (activeBudget != null) {
+                    val todaySpent = getTodaySpending(userId)
+                    val dailyBudget = activeBudget.totalBudget / 30 // Rough daily budget
+                    if (todaySpent <= dailyBudget) 1 else 0
+                } else 0
+            }
             ChallengeType.SAVINGS -> getTodaySavingsPercentage(userId)
             ChallengeType.STREAK -> getUserProgress(userId).currentStreak
             ChallengeType.CATEGORY_LIMIT -> getTodayCategoryComplianceCount(userId)
+        }
+    }
+
+    /**
+     * Get today's total spending
+     */
+    private suspend fun getTodaySpending(userId: Int): Double {
+        return try {
+            val todayStart = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+
+            val transactionManager = FirebaseTransactionManager.getInstance()
+            val allTransactions = transactionManager.getAllTransactionsForUser(userId)
+
+            allTransactions.filter { transaction ->
+                transaction.isExpense && transaction.dateTimestamp >= todayStart.timeInMillis
+            }.sumOf { it.amount }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting today's spending: ${e.message}", e)
+            0.0
         }
     }
 
@@ -656,35 +707,50 @@ class GamificationManager {
                 timeInMillis = userProgress.lastLoginDate
             }
 
+            // Check if user already logged today
+            val alreadyLoggedToday = isSameDay(lastLoginCal, today)
+
             val newStreak = when {
-                isSameDay(lastLoginCal, yesterday) -> {
-                    // Logged in yesterday, continue streak
-                    userProgress.currentStreak + 1
-                }
-                isSameDay(lastLoginCal, today) -> {
-                    // Already logged in today, maintain streak
+                alreadyLoggedToday -> {
+                    // Already logged today, don't change streak
+                    Log.d(TAG, "User already logged today, maintaining streak: ${userProgress.currentStreak}")
                     userProgress.currentStreak
+                }
+                isSameDay(lastLoginCal, yesterday) -> {
+                    // Logged yesterday, increment streak
+                    val newStreak = userProgress.currentStreak + 1
+                    Log.d(TAG, "Continuing streak: ${userProgress.currentStreak} -> $newStreak")
+                    newStreak
+                }
+                userProgress.lastLoginDate == 0L -> {
+                    // First time logging, start streak
+                    Log.d(TAG, "Starting first streak")
+                    1
                 }
                 else -> {
                     // Missed days, reset streak
+                    Log.d(TAG, "Streak broken, resetting to 1")
                     1
                 }
             }
 
-            val updatedProgress = userProgress.copy(
-                currentStreak = newStreak,
-                longestStreak = maxOf(userProgress.longestStreak, newStreak),
-                lastLoginDate = System.currentTimeMillis()
-            )
+            // Only update if there's a change
+            if (newStreak != userProgress.currentStreak || !alreadyLoggedToday) {
+                val updatedProgress = userProgress.copy(
+                    currentStreak = newStreak,
+                    longestStreak = maxOf(userProgress.longestStreak, newStreak),
+                    lastLoginDate = System.currentTimeMillis()
+                )
 
-            saveUserProgress(userId, updatedProgress)
+                saveUserProgress(userId, updatedProgress)
 
-            // Award streak bonuses
-            if (newStreak > userProgress.currentStreak) {
-                when (newStreak) {
-                    7 -> awardPoints(userId, 100, "7-day streak bonus!")
-                    14 -> awardPoints(userId, 200, "14-day streak bonus!")
-                    30 -> awardPoints(userId, 500, "30-day streak bonus!")
+                // Award streak bonuses only if streak increased
+                if (newStreak > userProgress.currentStreak) {
+                    when (newStreak) {
+                        7 -> awardPoints(userId, 100, "7-day streak bonus!")
+                        14 -> awardPoints(userId, 200, "14-day streak bonus!")
+                        30 -> awardPoints(userId, 500, "30-day streak bonus!")
+                    }
                 }
             }
 
