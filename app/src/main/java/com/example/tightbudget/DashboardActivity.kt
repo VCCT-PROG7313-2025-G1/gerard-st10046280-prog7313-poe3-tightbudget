@@ -36,8 +36,11 @@ import kotlinx.coroutines.launch
 import java.util.Date
 import android.util.TypedValue
 import android.view.ViewGroup
+import com.example.tightbudget.firebase.FirebaseCategoryManager
 import com.example.tightbudget.models.Achievement
+import com.example.tightbudget.models.Category
 import com.example.tightbudget.models.UserProgress
+import kotlin.collections.find
 import kotlin.collections.forEachIndexed
 
 /**
@@ -63,6 +66,7 @@ class DashboardActivity : AppCompatActivity() {
     private var currentUserId: Int = -1
     private var currentBudgetGoal: BudgetGoal? = null
     private var categoryBudgets: List<CategoryBudget> = listOf()
+    private var loadedCategories: List<Category> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,6 +75,8 @@ class DashboardActivity : AppCompatActivity() {
         // Initialize Firebase data manager
         firebaseDataManager = FirebaseDataManager.getInstance()
         gamificationManager = GamificationManager.getInstance()
+        // Load categories for emojis
+        loadCategoriesForEmojis()
 
         // Find UI components
         welcomeTextView = findViewById(R.id.welcomeText)
@@ -434,7 +440,8 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     /**
-     * Creates a category view that matches the hardcoded design
+     * Creates a category view that uses real category data including emoji
+     * Now uses actual category emoji instead of EmojiUtils fallback
      */
     private fun createCategoryView(categoryName: String, spending: Double, budget: Double): View {
         // Create a simple LinearLayout container
@@ -455,8 +462,8 @@ class DashboardActivity : AppCompatActivity() {
             )
         }
 
-        // Get proper emoji for this category
-        val emoji = EmojiUtils.getCategoryEmoji(categoryName)
+        // Get proper emoji for this category from stored categories
+        val emoji = getCategoryEmojiFromFirebase(categoryName)
 
         // Category name with emoji
         val nameView = TextView(this).apply {
@@ -466,9 +473,7 @@ class DashboardActivity : AppCompatActivity() {
             layoutParams = RelativeLayout.LayoutParams(
                 WRAP_CONTENT,
                 WRAP_CONTENT
-            ).apply {
-                addRule(RelativeLayout.ALIGN_PARENT_START)
-            }
+            )
         }
 
         // Amount text (spent/budget)
@@ -513,6 +518,37 @@ class DashboardActivity : AppCompatActivity() {
         categoryView.addView(progressBar)
 
         return categoryView
+    }
+
+    /**
+     * Get category emoji from Firebase data or fallback to EmojiUtils
+     * This method gets the real emoji from stored categories
+     */
+    private fun getCategoryEmojiFromFirebase(categoryName: String): String {
+        return try {
+            // Check if we have loaded categories with their emojis
+            loadedCategories.find { it.name.equals(categoryName, ignoreCase = true) }?.emoji
+                ?: EmojiUtils.getCategoryEmoji(categoryName) // Fallback to hardcoded mapping
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting category emoji: ${e.message}")
+            EmojiUtils.getCategoryEmoji(categoryName) // Fallback
+        }
+    }
+
+    /**
+     * Load categories from Firebase to get real emojis
+     */
+    private fun loadCategoriesForEmojis() {
+        lifecycleScope.launch {
+            try {
+                val categoryManager = FirebaseCategoryManager.getInstance()
+                loadedCategories = categoryManager.getAllCategories()
+                Log.d(TAG, "Loaded ${loadedCategories.size} categories for emoji mapping")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading categories for emojis: ${e.message}", e)
+                loadedCategories = emptyList()
+            }
+        }
     }
 
     private fun updateSpendingChart(spendingData: Map<String, Double>) {

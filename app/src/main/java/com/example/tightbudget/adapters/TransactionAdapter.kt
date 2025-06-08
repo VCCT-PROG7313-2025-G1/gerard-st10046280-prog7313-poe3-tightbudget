@@ -7,20 +7,26 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tightbudget.R
+import com.example.tightbudget.models.Category
 import com.example.tightbudget.models.Transaction
 import com.example.tightbudget.utils.EmojiUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.collections.find
 
 /**
  * Adapter for displaying a list of transactions (expenses or income)
  * in the Transactions screen's RecyclerView.
+ * Now supports real category data with emojis instead of hardcoded emojis.
  */
 class TransactionAdapter(
     private var transactions: List<Transaction>,
     private val onItemClick: (Transaction) -> Unit
 ) : RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>() {
+
+    // Store loaded categories for emoji lookup
+    private var loadedCategories: List<Category> = emptyList()
 
     /**
      * ViewHolder class that holds references to the views in each transaction item layout.
@@ -48,8 +54,8 @@ class TransactionAdapter(
         // Set transaction details line (category and date)
         holder.details.text = "${transaction.category} • ${formatDate(transaction.date)}"
 
-        // Set an emoji icon (simple fallback for now)
-        holder.icon.text = getCategoryEmoji(transaction.category)
+        // Set emoji using real category data or fallback to EmojiUtils
+        holder.icon.text = getCategoryEmojiFromData(transaction.category)
 
         // Colour-code the amount: red for expense, green for income
         val context = holder.itemView.context
@@ -67,9 +73,21 @@ class TransactionAdapter(
 
     override fun getItemCount(): Int = transactions.size
 
+    /**
+     * Update the transaction list
+     */
     fun updateList(newList: List<Transaction>) {
         transactions = newList
         notifyDataSetChanged()
+    }
+
+    /**
+     * Update the categories data for emoji lookup
+     * Call this method to provide real category data with emojis
+     */
+    fun updateCategories(categories: List<Category>) {
+        loadedCategories = categories
+        notifyDataSetChanged() // Refresh to show updated emojis
     }
 
     /**
@@ -89,9 +107,23 @@ class TransactionAdapter(
     }
 
     /**
-     * Gets the emoji for a category using the central EmojiUtils
+     * Gets the emoji for a category using real data or EmojiUtils fallback
+     */
+    private fun getCategoryEmojiFromData(categoryName: String): String {
+        // First try to find the category in loaded data
+        val category = loadedCategories.find { it.name.equals(categoryName, ignoreCase = true) }
+        return if (category != null && category.emoji.isNotBlank()) {
+            category.emoji // Use real stored emoji
+        } else {
+            EmojiUtils.getCategoryEmoji(categoryName) // Fallback to hardcoded
+        }
+    }
+
+    /**
+     * DEPRECATED: Old method - kept for backwards compatibility
+     * Use getCategoryEmojiFromData instead
      */
     private fun getCategoryEmoji(category: String): String {
-        return EmojiUtils.getCategoryEmoji(category)
+        return getCategoryEmojiFromData(category)
     }
 }
