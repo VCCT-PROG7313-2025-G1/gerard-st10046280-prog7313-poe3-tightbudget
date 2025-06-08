@@ -24,6 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.tightbudget.databinding.ActivityAddTransactionBinding
 import com.example.tightbudget.firebase.FirebaseTransactionManager
 import com.example.tightbudget.firebase.GamificationManager
+import com.example.tightbudget.firebase.RecurringTransactionManager
 import com.example.tightbudget.models.CategoryItem
 import com.example.tightbudget.models.Transaction
 import com.example.tightbudget.ui.CategoryPickerBottomSheet
@@ -191,6 +192,7 @@ class AddTransactionActivity : AppCompatActivity() {
         setupSaveButton()           // Save and validate inputs
         setupBackButton()           // Handle back navigation
         setupBottomNavigation()     // Bottom navigation bar
+        processRecurringTransactionsOnAppStart() // Process recurring transactions on app start
 
         Log.d(TAG, "AddTransactionActivity created")
     }
@@ -334,7 +336,7 @@ class AddTransactionActivity : AppCompatActivity() {
 
     // This handles the recurring switch and displays a projected recurring date
     private fun setupRecurringSwitch() {
-        binding.recurringSwitch.isChecked = false // Switch defaults to OFF
+        binding.recurringSwitch.isChecked = false
         binding.recurringDatePicker.visibility = View.GONE
 
         binding.recurringSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -342,15 +344,30 @@ class AddTransactionActivity : AppCompatActivity() {
             binding.recurringDatePicker.visibility = if (isChecked) View.VISIBLE else View.GONE
 
             if (isChecked) {
+                // Calculate next month's date
                 val recurringDate = Calendar.getInstance()
                 recurringDate.timeInMillis = selectedDate.timeInMillis
-                recurringDate.add(Calendar.DAY_OF_YEAR, 30)
+                recurringDate.add(Calendar.MONTH, 1)
 
                 val formatted = SimpleDateFormat(
                     "EEEE, d MMMM yyyy",
                     Locale.getDefault()
                 ).format(recurringDate.time)
-                binding.recurringDatePicker.text = "Repeats on: $formatted"
+
+                binding.recurringDatePicker.text = "🔄 Monthly recurring\nNext: $formatted"
+                binding.recurringDatePicker.setTextColor(getColor(R.color.primary_purple_light))
+            }
+        }
+    }
+
+    // Processes recurring transactions when the app starts
+    private fun processRecurringTransactionsOnAppStart() {
+        lifecycleScope.launch {
+            try {
+                val recurringTransactionManager = RecurringTransactionManager.getInstance()
+                recurringTransactionManager.processDueRecurringTransactions()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error processing recurring transactions: ${e.message}", e)
             }
         }
     }
@@ -535,7 +552,9 @@ class AddTransactionActivity : AppCompatActivity() {
     private fun saveTransaction() {
         try {
             val amountText = binding.amountInput.text.toString()
-            val amount = amountText.toDoubleOrNull() ?: 0.0
+            val amount = if (amountText.isNotEmpty()) {
+                amountText.toDoubleOrNull() ?: 0.0
+            } else 0.0
 
             val merchant = binding.merchantInput.text.toString()
             val description = binding.descriptionInput.text.toString()
@@ -559,16 +578,23 @@ class AddTransactionActivity : AppCompatActivity() {
                         merchant = merchant,
                         category = category,
                         amount = amount,
-                        date = selectedDate.time, // Uses helper constructor
+                        date = selectedDate.time,
                         isExpense = isExpense,
                         description = description.takeIf { it.isNotEmpty() },
                         receiptPath = receiptPath,
                         isRecurring = isRecurring
                     )
 
-                    // Save to Firebase instead of Room
+                    // Save the main transaction to Firebase
                     val firebaseTransactionManager = FirebaseTransactionManager.getInstance()
                     val savedTransaction = firebaseTransactionManager.createTransaction(transaction)
+
+                    // If it's recurring, create the recurring transaction template
+                    if (isRecurring) {
+                        val recurringTransactionManager = RecurringTransactionManager.getInstance()
+                        val recurringId = recurringTransactionManager.createRecurringTransaction(savedTransaction)
+                        Log.d(TAG, "Created recurring transaction with ID: $recurringId")
+                    }
 
                     // Gamification logic for points earned
                     val gamificationManager = GamificationManager.getInstance()
@@ -576,19 +602,6 @@ class AddTransactionActivity : AppCompatActivity() {
 
                     Log.d(TAG, "Transaction saved to Firebase with ID: ${savedTransaction.id}")
                     Log.d(TAG, "Points earned from gamification: $pointsEarned")
-                    Log.d(TAG, "Merchant/Source: $merchant")
-                    Log.d(TAG, "Description: $description")
-                    Log.d(TAG, "Category: $category")
-                    Log.d(TAG, "Amount: $amount, ${if (isExpense) "Expense" else "Income"}")
-                    Log.d(
-                        TAG,
-                        "Date: ${
-                            SimpleDateFormat(
-                                "yyyy-MM-dd",
-                                Locale.getDefault()
-                            ).format(selectedDate.time)
-                        }"
-                    )
                     Log.d(TAG, "Recurring: $isRecurring")
 
                     runOnUiThread {
@@ -596,17 +609,21 @@ class AddTransactionActivity : AppCompatActivity() {
                         binding.saveTransactionButton.isEnabled = true
                         binding.saveTransactionButton.text = "SAVE TRANSACTION"
 
-                        // Show success message with points if earned
-                        val message = if (pointsEarned > 0) {
-                            "Transaction saved! 🎉\n+$pointsEarned points earned!"
-                        } else {
-                            "Transaction saved to Firebase successfully!"
+                        // Show success message with points and recurring info
+                        val message = buildString {
+                            append("Transaction saved!")
+                            if (pointsEarned > 0) {
+                                append("\n🎉 +$pointsEarned points earned!")
+                            }
+                            if (isRecurring) {
+                                append("\n🔄 Recurring monthly transaction set up!")
+                            }
                         }
 
                         Toast.makeText(
                             this@AddTransactionActivity,
                             message,
-                            Toast.LENGTH_LONG  // Changed to LONG to show points message longer
+                            Toast.LENGTH_LONG
                         ).show()
 
                         // Return to Dashboard

@@ -30,6 +30,9 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.SearchView
 import com.example.tightbudget.firebase.FirebaseCategoryManager
+import com.example.tightbudget.firebase.RecurringTransactionManager
+import com.example.tightbudget.models.RecurringTransaction
+import com.example.tightbudget.utils.RecurringTransactionProcessor
 
 /**
  * Activity that displays a scrollable list of all transactions (expenses and income).
@@ -41,6 +44,9 @@ class TransactionsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityTransactionsBinding
     private lateinit var transactionAdapter: TransactionAdapter
     private lateinit var firebaseDataManager: FirebaseDataManager
+    private var showingRecurringTransactions = false
+    private var recurringTransactions: List<RecurringTransaction> = emptyList()
+    private var hasShownRecurringToast = false
     private val TAG = "TransactionsActivity"
 
     // Filter state variables
@@ -60,6 +66,9 @@ class TransactionsActivity : AppCompatActivity() {
 
         // Initialize Firebase data manager
         firebaseDataManager = FirebaseDataManager.getInstance()
+
+        // Process recurring transactions if needed
+        RecurringTransactionProcessor.processIfNeeded(this)
 
         val header = findViewById<View>(R.id.header)
 
@@ -240,6 +249,7 @@ class TransactionsActivity : AppCompatActivity() {
             popup.menu.add("Last 3 Months")
             popup.menu.add("Last 6 Months")
             popup.menu.add("This Year")
+            popup.menu.add("Recurring Transactions")
             popup.menu.add("Custom Range...")
 
             popup.setOnMenuItemClickListener { item ->
@@ -247,6 +257,9 @@ class TransactionsActivity : AppCompatActivity() {
                 binding.periodFilter.text = currentPeriod
 
                 when (currentPeriod) {
+                    "Recurring Transactions" -> {
+                        showRecurringTransactions()
+                    }
                     "This Month" -> {
                         val calendar = Calendar.getInstance()
                         calendar.set(Calendar.DAY_OF_MONTH, 1)
@@ -300,6 +313,9 @@ class TransactionsActivity : AppCompatActivity() {
                     else -> { // All Time
                         startDate = null
                         endDate = null
+                        showingRecurringTransactions = false
+                        Log.d(TAG, "Showing all transactions")
+                        applyAllFilters()
                     }
                 }
 
@@ -405,7 +421,12 @@ class TransactionsActivity : AppCompatActivity() {
         ).show()
     }
 
+    // Applies all filters based on the current state
     private fun applyAllFilters() {
+        if (showingRecurringTransactions) {
+            displayRecurringTransactions()
+            return
+        }
         var filtered = allTransactions
 
         // Apply date filter
@@ -711,5 +732,110 @@ class TransactionsActivity : AppCompatActivity() {
             }
         }
     }
-}
 
+    private fun showRecurringTransactions() {
+        showingRecurringTransactions = true
+
+        lifecycleScope.launch {
+            try {
+                val userId = getCurrentUserId()
+                if (userId == -1) {
+                    runOnUiThread {
+                        Toast.makeText(this@TransactionsActivity, "Please log in to view recurring transactions", Toast.LENGTH_SHORT).show()
+                        // Reset to All Time
+                        currentPeriod = "All Time"
+                        binding.periodFilter.text = currentPeriod
+                        showingRecurringTransactions = false
+                        applyAllFilters()
+                    }
+                    return@launch
+                }
+
+                val recurringManager = RecurringTransactionManager.getInstance()
+                val loadedRecurringTransactions = recurringManager.getRecurringTransactionsForUser(userId)
+
+                runOnUiThread {
+                    if (loadedRecurringTransactions.isEmpty()) {
+                        Toast.makeText(this@TransactionsActivity, "No recurring transactions found", Toast.LENGTH_SHORT).show()
+                        transactionAdapter.updateList(emptyList())
+                        binding.transactionsCount.text = "0 recurring transactions"
+                        updateTransactionSummary(emptyList())
+                        return@runOnUiThread
+                    }
+
+                    recurringTransactions = loadedRecurringTransactions
+                    displayRecurringTransactions()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading recurring transactions: ${e.message}", e)
+                runOnUiThread {
+                    Toast.makeText(this@TransactionsActivity, "Error loading recurring transactions", Toast.LENGTH_SHORT).show()
+                    // Reset to All Time
+                    currentPeriod = "All Time"
+                    binding.periodFilter.text = currentPeriod
+                    showingRecurringTransactions = false
+                    applyAllFilters()
+                }
+            }
+        }
+    }
+
+    // Displays the recurring transactions in the RecyclerView
+    private fun displayRecurringTransactions() {
+        val activeRecurringTransactions = recurringTransactions.filter { it.isActive }
+
+        Log.d(TAG, "Total recurring transactions: ${recurringTransactions.size}")
+        Log.d(TAG, "Active recurring transactions: ${activeRecurringTransactions.size}")
+
+        // Defensive: do not show toast unless truly empty
+        if (recurringTransactions.isNotEmpty() && activeRecurringTransactions.isEmpty()) {
+            Toast.makeText(this, "No active recurring transactions found", Toast.LENGTH_SHORT).show()
+            transactionAdapter.updateList(emptyList())
+            binding.transactionsCount.text = "0 active recurring transactions"
+            updateTransactionSummary(emptyList())
+            return
+        }
+
+        if (recurringTransactions.isEmpty()) {
+            // Don't show any toast — it's already handled earlier
+            transactionAdapter.updateList(emptyList())
+            binding.transactionsCount.text = "0 recurring transactions"
+            updateTransactionSummary(emptyList())
+            return
+        }
+
+        // Normal case — valid data
+        val displayTransactions = activeRecurringTransactions.map { recurring ->
+            Transaction(
+                id = recurring.id.hashCode(),
+                userId = recurring.userId,
+                merchant = "🔄 ${recurring.merchant}",
+                category = recurring.category,
+                amount = recurring.amount,
+                date = recurring.nextOccurrence,
+                isExpense = recurring.isExpense,
+                description = buildString {
+                    append("${recurring.getFrequencyDescription()} recurring")
+                    if (!recurring.description.isNullOrEmpty()) {
+                        append(" • ${recurring.description}")
+                    }
+                    val daysUntil = recurring.getDaysUntilNext()
+                    when {
+                        daysUntil < 0 -> append(" • Overdue!")
+                        daysUntil == 0 -> append(" • Due today!")
+                        daysUntil <= 7 -> append(" • Due in $daysUntil days")
+                        else -> append(" • Next: ${SimpleDateFormat("MMM d", Locale.getDefault()).format(recurring.nextOccurrence)}")
+                    }
+                },
+                receiptPath = null,
+                isRecurring = true
+            )
+        }.sortedBy { it.date }
+
+        transactionAdapter.updateList(displayTransactions)
+        binding.transactionsCount.text = "${displayTransactions.size} recurring transactions"
+        updateTransactionSummary(displayTransactions)
+
+        Log.d(TAG, "Displaying ${displayTransactions.size} recurring transactions")
+    }
+}
