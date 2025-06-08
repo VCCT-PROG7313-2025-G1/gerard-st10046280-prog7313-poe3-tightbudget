@@ -11,13 +11,15 @@ on:
       - develop      # Include 'develop' branch for push events
       - feature/*    # Include any feature branch (e.g., feature/xyz)
       - chore/*      # Include any chore branch (e.g., chore/xyz)
+      - fix/*        # Include any fix branch (e.g., chore/xyz)
   pull_request:
     branches:
       - main
       - develop      # Include 'develop' branch for pull request events
       - feature/*    # Include any feature branch (e.g., feature/xyz)
       - chore/*      # Include any chore branch (e.g., chore/xyz)
-
+      - fix/*        # Include any fix branch (e.g., chore/xyz)
+      
 jobs:
   test:
     runs-on: ubuntu-latest
