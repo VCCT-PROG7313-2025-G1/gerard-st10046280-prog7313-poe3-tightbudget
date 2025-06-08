@@ -132,6 +132,20 @@ class StatisticsActivity : AppCompatActivity() {
         binding.chartToggle.setOnClickListener {
             showPieChart = !showPieChart
             updateChartType()
+
+            // Add subtle animation feedback
+            binding.chartToggle.animate()
+                .scaleX(0.9f)
+                .scaleY(0.9f)
+                .setDuration(100)
+                .withEndAction {
+                    binding.chartToggle.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(100)
+                        .start()
+                }
+                .start()
         }
     }
 
@@ -632,6 +646,11 @@ class StatisticsActivity : AppCompatActivity() {
         if (categoryDataList.isEmpty()) {
             binding.noDataMessage.visibility = View.VISIBLE
             binding.chartToggle.visibility = View.GONE
+
+            // Make the no data message more helpful
+            binding.noDataMessage.text = "📊 No spending data available for this period.\n\nStart adding transactions to see your spending breakdown!"
+            binding.noDataMessage.textAlignment = View.TEXT_ALIGNMENT_CENTER
+
             return
         }
 
@@ -639,20 +658,19 @@ class StatisticsActivity : AppCompatActivity() {
         binding.chartToggle.visibility = View.VISIBLE
 
         val chartView = if (showPieChart) {
-            // Show icon for bar chart in toggle
+            // Show what chart will come next
             binding.chartToggleIcon.setImageResource(R.drawable.ic_bar_chart)
 
-            // Create pie chart
+
             ChartUtils.createEnhancedDonutChartView(
                 this,
                 categoryDataList,
                 totalSpent.toFloat()
             )
         } else {
-            // Show icon for pie chart in toggle
             binding.chartToggleIcon.setImageResource(R.drawable.ic_pie_chart)
 
-            // Create bar chart
+
             ChartUtils.createCategoryBarChartView(
                 this,
                 categoryDataList

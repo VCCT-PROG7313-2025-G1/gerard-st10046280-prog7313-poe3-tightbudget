@@ -153,6 +153,8 @@ object ChartUtils {
             color = Color.WHITE
             textSize = 24f
             textAlign = Paint.Align.CENTER
+            setShadowLayer(4f, 2f, 2f, Color.BLACK)  // Add shadow for better visibility
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)  // Make text bolder
         }
         private val centerTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.BLACK
@@ -197,7 +199,7 @@ object ChartUtils {
                 val labelY = centerY + (labelRadius * sin(labelAngle)).toFloat()
 
                 // Only draw labels for segments large enough to be visible
-                if (sweepAngle > 15) {
+                if (sweepAngle > 10) {
                     val percentage = String.format("%.1f%%", category.getPercentage(totalAmount))
                     canvas.drawText(percentage, labelX, labelY, labelPaint)
                 }
@@ -252,8 +254,12 @@ object ChartUtils {
             categories.forEachIndexed { index, category ->
                 val y = padding + index * (barHeight + 40f)
 
-                // Draw category name with emoji
+                // ENHANCED: Draw category name with emoji and better styling
                 textPaint.textAlign = Paint.Align.LEFT
+                textPaint.textSize = 28f  // Slightly larger
+                textPaint.color = Color.DKGRAY
+                textPaint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+
                 val displayName = if (category.emoji.isNotEmpty()) "${category.emoji} ${category.name}" else category.name
                 canvas.drawText(
                     displayName,
@@ -283,13 +289,22 @@ object ChartUtils {
                     limitPaint
                 )
 
-                // Draw amount label
-                textPaint.textAlign = Paint.Align.LEFT
+                // ENHANCED: Draw amount label with color based on budget status
+                val amountPaint = Paint(textPaint).apply {
+                    color = when (category.getBudgetStatus()) {
+                        ChartUtils.BudgetStatus.OVER_BUDGET -> Color.RED
+                        ChartUtils.BudgetStatus.NEAR_LIMIT -> Color.rgb(255, 165, 0) // Orange
+                        else -> Color.parseColor("#2E7D32") // Green
+                    }
+                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                    textAlign = Paint.Align.LEFT
+                }
+
                 canvas.drawText(
                     "R${String.format("%,.0f", category.amount)}",
                     axisLabelWidth + barWidth + 10f,
                     y + barHeight / 2 + textPaint.textSize / 3,
-                    textPaint
+                    amountPaint
                 )
             }
         }
