@@ -51,136 +51,40 @@ package com.example.tightbudget.adapters
             holder.challengeDescription.text = challenge.description
             holder.challengePoints.text = "+${challenge.pointsReward} pts"
 
-            // Calculate progress percentage (simplified approach)
-            // Since your DailyChallenge model doesn't have currentProgress field,
-            // we'll use a simplified approach or get it from the parent activity
-            val currentProgress = if (challenge.isCompleted) {
-                challenge.targetValue
-            } else {
-                // For demo purposes, calculate progress based on challenge type
-                getCurrentProgressForChallenge(challenge)
-            }
+            // Use actual progress from challenge model
+            val progressPercentage = challenge.getProgressPercentage()
+            holder.challengeProgress.progress = progressPercentage
+            holder.challengeProgressText.text = challenge.getProgressText()
 
-            val progressPercentage = if (challenge.targetValue > 0) {
-                (currentProgress * 100) / challenge.targetValue
-            } else 0
-
-            // Animate progress bar
-            val progress = progressPercentage.coerceAtMost(100)
-            ObjectAnimator.ofInt(holder.challengeProgress, "progress", 0, progress).apply {
-                duration = 1000
-                start()
-            }
-
-            // Update progress text
-            holder.challengeProgressText.text = "$currentProgress/${challenge.targetValue} completed"
-
-            // Set completion status and styling
+            // Set completion status
             if (challenge.isCompleted) {
-                // Completed state
                 holder.challengeStatus.setImageResource(R.drawable.ic_check_circle)
-                holder.challengeStatus.setColorFilter(
-                    ContextCompat.getColor(context, R.color.green_light)
-                )
-                holder.challengeTimeLeft.text = "Completed! 🎉"
-                holder.challengeTimeLeft.setTextColor(
-                    ContextCompat.getColor(context, android.R.color.white)
-                )
-                holder.challengeTimeLeft.setBackgroundResource(R.drawable.completed_badge_background)
-
-                // Show completion overlay
+                holder.challengeStatus.setColorFilter(ContextCompat.getColor(context, R.color.green_light))
                 holder.completionOverlay.visibility = View.VISIBLE
+                holder.challengeTimeLeft.text = "Completed! ✓"
 
-                // Style as completed
-                holder.challengeIcon.alpha = 0.8f
-                holder.challengeTitle.setTextColor(
-                    ContextCompat.getColor(context, R.color.green_light)
-                )
-
-                // Enhanced points styling for completed challenges
-                holder.challengePoints.setTextColor(ContextCompat.getColor(context, android.R.color.white))
-                holder.challengePoints.backgroundTintList =
-                    ContextCompat.getColorStateList(context, R.color.green_light)
-
-            } else {
-                // In progress state
-                holder.completionOverlay.visibility = View.GONE
-                holder.challengeIcon.alpha = 1.0f
-                holder.challengeTitle.setTextColor(
-                    ContextCompat.getColor(context, R.color.text_dark)
-                )
-
-                // Calculate time left
-                val timeLeft = challenge.expiresAt - System.currentTimeMillis()
-                val hoursLeft = (timeLeft / (1000 * 60 * 60)).toInt()
-
-                if (timeLeft > 0) {
-                    holder.challengeStatus.setImageResource(R.drawable.ic_clock)
-                    holder.challengeStatus.setColorFilter(
-                        ContextCompat.getColor(context, R.color.text_medium)
-                    )
-
-                    // Format time remaining with better colors
-                    val timeText = when {
-                        hoursLeft > 24 -> "${hoursLeft / 24}d ${hoursLeft % 24}h left"
-                        hoursLeft > 0 -> "${hoursLeft}h left"
-                        else -> {
-                            val minutesLeft = (timeLeft / (1000 * 60)).toInt()
-                            "${minutesLeft}m left"
-                        }
-                    }
-
-                    holder.challengeTimeLeft.text = timeText
-                    // Use white text on dark background for better readability
-                    holder.challengeTimeLeft.setTextColor(
-                        ContextCompat.getColor(context, android.R.color.white)
-                    )
-                    holder.challengeTimeLeft.setBackgroundResource(R.drawable.time_badge_background)
-
-                    // Points styling for active challenges
-                    holder.challengePoints.setTextColor(
-                        ContextCompat.getColor(context, android.R.color.white)
-                    )
-                    holder.challengePoints.backgroundTintList =
-                        ContextCompat.getColorStateList(context, R.color.teal_light)
-
-                } else {
-                    // Expired state
-                    holder.challengeStatus.setImageResource(R.drawable.ic_close)
-                    holder.challengeStatus.setColorFilter(
-                        ContextCompat.getColor(context, R.color.red_light)
-                    )
-                    holder.challengeTimeLeft.text = "Expired"
-                    holder.challengeTimeLeft.setTextColor(
-                        ContextCompat.getColor(context, android.R.color.white)
-                    )
-                    holder.challengeTimeLeft.setBackgroundResource(R.drawable.expired_badge_background)
-
-                    // Dim expired challenges
-                    holder.itemView.alpha = 0.6f
-
-                    // Gray out points for expired challenges
-                    holder.challengePoints.setTextColor(
-                        ContextCompat.getColor(context, R.color.text_light)
-                    )
-                    holder.challengePoints.backgroundTintList =
-                        ContextCompat.getColorStateList(context, R.color.gray_medium)
+                // Animate completion
+                ObjectAnimator.ofFloat(holder.itemView, "alpha", 0.7f, 1f).apply {
+                    duration = 300
+                    start()
                 }
+            } else {
+                holder.challengeStatus.setImageResource(R.drawable.ic_clock)
+                holder.challengeStatus.setColorFilter(ContextCompat.getColor(context, R.color.gray_medium))
+                holder.completionOverlay.visibility = View.GONE
+
+                // Calculate time remaining
+                val timeLeft = (challenge.expiresAt - System.currentTimeMillis()) / (1000 * 60 * 60)
+                holder.challengeTimeLeft.text = "${timeLeft}h left"
             }
 
-            // Set challenge type specific styling
-            setChallengeTypeColors(holder, challenge.type, context)
-
-            // Set click listener with animation
+            // Set click listener
             holder.itemView.setOnClickListener {
-                // Add ripple animation
-                holder.itemView.isPressed = true
-                holder.itemView.postDelayed({
-                    holder.itemView.isPressed = false
-                    onChallengeClick(challenge)
-                }, 150)
+                onChallengeClick(challenge)
             }
         }
+
+
 
         override fun getItemCount(): Int = challenges.size
 

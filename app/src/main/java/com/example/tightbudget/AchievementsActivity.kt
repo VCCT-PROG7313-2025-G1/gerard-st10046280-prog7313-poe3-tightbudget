@@ -14,8 +14,11 @@ import com.example.tightbudget.databinding.ActivityAchievementsBinding
 import com.example.tightbudget.firebase.FirebaseDataManager
 import com.example.tightbudget.firebase.GamificationManager
 import com.example.tightbudget.models.Achievement
+import com.example.tightbudget.models.AchievementType
+import com.example.tightbudget.models.Transaction
 import com.example.tightbudget.models.UserProgress
 import kotlinx.coroutines.launch
+import kotlin.collections.map
 
 /**
  * Activity to display all user achievements with progress tracking
@@ -140,18 +143,21 @@ class AchievementsActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Calculate current progress for an achievement
+     */
     private fun calculateAchievementProgress(
         achievement: Achievement,
         userProgress: UserProgress,
-        transactions: List<com.example.tightbudget.models.Transaction>
+        transactions: List<Transaction>
     ): Int {
         return when (achievement.type) {
-            com.example.tightbudget.models.AchievementType.TRANSACTIONS -> userProgress.transactionCount
-            com.example.tightbudget.models.AchievementType.RECEIPTS -> userProgress.receiptsUploaded
-            com.example.tightbudget.models.AchievementType.STREAK -> userProgress.longestStreak
-            com.example.tightbudget.models.AchievementType.POINTS -> userProgress.totalPoints
-            com.example.tightbudget.models.AchievementType.BUDGET_GOALS -> userProgress.budgetGoalsMet
-            com.example.tightbudget.models.AchievementType.CATEGORIES -> {
+            AchievementType.POINTS -> userProgress.totalPoints
+            AchievementType.TRANSACTIONS -> userProgress.transactionCount
+            AchievementType.RECEIPTS -> userProgress.receiptsUploaded
+            AchievementType.STREAK -> userProgress.longestStreak
+            AchievementType.BUDGET_GOALS -> userProgress.budgetGoalsMet
+            AchievementType.CATEGORIES -> {
                 // Count unique categories used
                 transactions.map { it.category }.distinct().size
             }
