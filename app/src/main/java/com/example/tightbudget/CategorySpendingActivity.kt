@@ -1,5 +1,6 @@
 package com.example.tightbudget
 
+import CategorySpendingAdapter
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
@@ -11,7 +12,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.tightbudget.adapters.CategorySpendingAdapter
 import com.example.tightbudget.databinding.ActivityCategorySpendingBinding
 import com.example.tightbudget.firebase.FirebaseBudgetManager
 import com.example.tightbudget.firebase.FirebaseDataManager

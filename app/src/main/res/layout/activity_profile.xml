@@ -15,45 +15,53 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Header Section with curved bottom edge -->
-        <RelativeLayout
+        <!-- Improved Header Section with better system window handling -->
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/profileHeader"
             android:layout_width="match_parent"
-            android:layout_height="240dp"
+            android:layout_height="280dp"
             android:background="@drawable/gradient_header_rounded"
-            android:paddingTop="32dp"
-            android:paddingStart="25dp"
-            android:paddingEnd="25dp">
+            android:paddingStart="20dp"
+            android:paddingTop="48dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="24dp"
+            android:fitsSystemWindows="true">
 
-            <!-- Back Button -->
+            <!-- Back Button with better touch target -->
             <ImageView
                 android:id="@+id/backButton"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_alignParentStart="true"
-                android:padding="6dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:src="@drawable/ic_back"
-                android:contentDescription="Back" />
+                android:contentDescription="Back"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="8dp"
+                app:tint="@color/white"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- Streak Badge -->
+            <!-- Streak Badge with improved positioning -->
             <LinearLayout
                 android:id="@+id/streakBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                android:background="@drawable/rounded_button">
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:background="@drawable/rounded_button"
+                android:elevation="2dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🔥"
-                    android:textSize="14sp" />
+                    android:textSize="16sp" />
+
                 <TextView
                     android:id="@+id/streakCount"
                     android:layout_width="wrap_content"
@@ -62,21 +70,25 @@
                     android:textStyle="bold"
                     android:textColor="@color/primary_purple_dark"
                     android:layout_marginStart="6dp"
-                    android:textSize="14sp" />
+                    android:textSize="16sp" />
             </LinearLayout>
 
-            <!-- Profile Avatar and Username -->
+            <!-- Profile Content - Centered -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
                 android:orientation="vertical"
-                android:gravity="center">
+                android:gravity="center"
+                app:layout_constraintTop_toBottomOf="@id/backButton"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <!-- Profile Avatar with Level Badge -->
                 <RelativeLayout
-                    android:layout_width="100dp"
-                    android:layout_height="100dp">
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_marginBottom="16dp">
 
                     <ImageView
                         android:id="@+id/profileAvatar"
@@ -84,22 +96,24 @@
                         android:layout_height="match_parent"
                         android:src="@drawable/ic_circle"
                         android:background="@drawable/rounded_button"
-                        android:padding="12dp"
+                        android:padding="16dp"
                         android:contentDescription="User Avatar"
-                        android:scaleType="fitCenter" />
+                        android:scaleType="fitCenter"
+                        android:elevation="4dp" />
 
                     <TextView
                         android:id="@+id/profileLevelBadge"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
                         android:layout_alignParentEnd="true"
                         android:layout_alignParentBottom="true"
                         android:background="@drawable/button_gradient"
                         android:gravity="center"
                         android:text="0"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textColor="@color/white"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:elevation="6dp" />
                 </RelativeLayout>
 
                 <!-- Username -->
@@ -110,35 +124,42 @@
                     android:text="Loading..."
                     android:textColor="@color/white"
                     android:textStyle="bold"
-                    android:textSize="20sp"
-                    android:layout_marginTop="12dp" />
+                    android:textSize="24sp"
+                    android:shadowColor="#40000000"
+                    android:shadowDx="0"
+                    android:shadowDy="2"
+                    android:shadowRadius="4" />
             </LinearLayout>
-        </RelativeLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- Experience Card -->
+        <!-- Experience Card with improved spacing -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
             app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
+            app:cardElevation="6dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="24dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:id="@+id/levelTitleText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Level 0: Loading..."
-                        android:textSize="16sp"
+                        android:textSize="18sp"
                         android:textColor="@color/text_dark"
                         android:textStyle="bold" />
 
@@ -149,7 +170,8 @@
                         android:layout_alignParentEnd="true"
                         android:text="0 pts"
                         android:textColor="@color/primary_purple_light"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:textSize="16sp" />
                 </RelativeLayout>
 
                 <TextView
@@ -158,15 +180,16 @@
                     android:layout_height="wrap_content"
                     android:text="Next Level"
                     android:textColor="@color/text_light"
-                    android:textSize="12sp"
-                    android:layout_marginTop="6dp" />
+                    android:textSize="14sp"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="8dp" />
 
                 <ProgressBar
                     android:id="@+id/levelProgressBar"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="4dp"
+                    android:layout_height="10dp"
+                    android:layout_marginBottom="12dp"
                     android:progress="0"
                     android:progressTint="@color/teal_light"
                     android:progressBackgroundTint="@color/gray_light" />
@@ -177,44 +200,50 @@
                     android:layout_height="wrap_content"
                     android:text="Loading progress..."
                     android:textColor="@color/text_medium"
-                    android:textSize="14sp"
-                    android:layout_marginTop="8dp" />
+                    android:textSize="14sp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Achievements Card -->
+        <!-- Achievements Card with improved header -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardAchievements"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="16dp"
             app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
+            app:cardElevation="6dp">
 
             <LinearLayout
                 android:id="@+id/achievementsSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="24dp">
 
                 <!-- Section Title with "All Badges" -->
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp">
+                    android:layout_marginBottom="20dp">
 
-                    <TextView
-                        android:id="@+id/achievementsTitle"
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Your Achievements"
-                        android:textColor="@color/text_dark"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_alignParentStart="true" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_alignParentStart="true">
+
+                        <TextView
+                            android:id="@+id/achievementsTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Your Achievements"
+                            android:textColor="@color/text_dark"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/allBadgesButton"
@@ -225,19 +254,19 @@
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="8dp" />
                 </RelativeLayout>
 
-                <!-- Badge row -->
+                <!-- Badge row with improved spacing -->
                 <LinearLayout
                     android:id="@+id/badgeRow"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center">
+                    android:orientation="horizontal">
 
-                    <!-- Badge 1 - Dynamic -->
+                    <!-- Badge 1 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -248,13 +277,14 @@
 
                         <TextView
                             android:id="@+id/saverBadgeIcon"
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
                             android:text="🔒"
-                            android:textSize="26sp"
+                            android:textSize="32sp"
                             android:gravity="center"
                             android:textAlignment="center"
-                            android:alpha="0.5" />
+                            android:alpha="0.5"
+                            android:background="@drawable/achievement_mini_background" />
 
                         <TextView
                             android:id="@+id/saverBadgeLabel"
@@ -263,13 +293,14 @@
                             android:text="Loading..."
                             android:textColor="@color/text_medium"
                             android:textSize="12sp"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="8dp"
                             android:textAlignment="center"
                             android:maxLines="2"
-                            android:ellipsize="end" />
+                            android:ellipsize="end"
+                            android:gravity="center" />
                     </LinearLayout>
 
-                    <!-- Badge 2 - Dynamic -->
+                    <!-- Badge 2 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -280,13 +311,14 @@
 
                         <TextView
                             android:id="@+id/consistentBadgeIcon"
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
                             android:text="🔒"
-                            android:textSize="26sp"
+                            android:textSize="32sp"
                             android:gravity="center"
                             android:textAlignment="center"
-                            android:alpha="0.5" />
+                            android:alpha="0.5"
+                            android:background="@drawable/achievement_mini_background" />
 
                         <TextView
                             android:id="@+id/consistentBadgeLabel"
@@ -295,13 +327,14 @@
                             android:text="Loading..."
                             android:textColor="@color/text_medium"
                             android:textSize="12sp"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="8dp"
                             android:textAlignment="center"
                             android:maxLines="2"
-                            android:ellipsize="end" />
+                            android:ellipsize="end"
+                            android:gravity="center" />
                     </LinearLayout>
 
-                    <!-- Badge 3 - Dynamic -->
+                    <!-- Badge 3 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -312,13 +345,14 @@
 
                         <TextView
                             android:id="@+id/transportBadgeIcon"
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
                             android:text="🔒"
-                            android:textSize="26sp"
+                            android:textSize="32sp"
                             android:gravity="center"
                             android:textAlignment="center"
-                            android:alpha="0.5" />
+                            android:alpha="0.5"
+                            android:background="@drawable/achievement_mini_background" />
 
                         <TextView
                             android:id="@+id/transportBadgeLabel"
@@ -327,13 +361,14 @@
                             android:text="Loading..."
                             android:textColor="@color/text_medium"
                             android:textSize="12sp"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="8dp"
                             android:textAlignment="center"
                             android:maxLines="2"
-                            android:ellipsize="end" />
+                            android:ellipsize="end"
+                            android:gravity="center" />
                     </LinearLayout>
 
-                    <!-- Badge 4 - Dynamic -->
+                    <!-- Badge 4 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -344,13 +379,14 @@
 
                         <TextView
                             android:id="@+id/lockedBadgeIcon"
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
                             android:text="🔒"
-                            android:textSize="26sp"
+                            android:textSize="32sp"
                             android:gravity="center"
                             android:textAlignment="center"
-                            android:alpha="0.5" />
+                            android:alpha="0.5"
+                            android:background="@drawable/achievement_mini_background" />
 
                         <TextView
                             android:id="@+id/lockedBadgeLabel"
@@ -359,45 +395,53 @@
                             android:text="Loading..."
                             android:textColor="@color/text_light"
                             android:textSize="12sp"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="8dp"
                             android:textAlignment="center"
                             android:maxLines="2"
-                            android:ellipsize="end" />
+                            android:ellipsize="end"
+                            android:gravity="center" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Daily Challenges Card -->
+        <!-- Daily Challenges Card with improved design -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardChallenges"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="16dp"
             app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
+            app:cardElevation="6dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="24dp">
 
-                <!-- Header with points -->
+                <!-- Header with improved icon -->
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp">
+                    android:layout_marginBottom="20dp">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Daily Challenges"
-                        android:textColor="@color/text_dark"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Daily Challenges"
+                            android:textColor="@color/text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/totalPoints"
@@ -406,7 +450,9 @@
                         android:text="0 pts"
                         android:textColor="@color/primary_purple_light"
                         android:textStyle="bold"
-                        android:layout_alignParentEnd="true" />
+                        android:textSize="16sp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true" />
                 </RelativeLayout>
 
                 <!-- Challenge 1 -->
@@ -415,14 +461,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="16dp"
+                    android:gravity="center_vertical">
 
                     <CheckBox
                         android:id="@+id/challenge1Checkbox"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:buttonTint="@color/teal_light"
-                        android:enabled="false" />
+                        android:enabled="false"
+                        android:layout_marginEnd="12dp" />
 
                     <TextView
                         android:id="@+id/challenge1Text"
@@ -432,7 +480,7 @@
                         android:text="Loading challenges..."
                         android:textColor="@color/text_medium"
                         android:textSize="14sp"
-                        android:layout_gravity="center_vertical" />
+                        android:lineSpacingMultiplier="1.2" />
 
                     <TextView
                         android:id="@+id/challenge1Progress"
@@ -441,7 +489,7 @@
                         android:text="0/3"
                         android:textColor="@color/text_medium"
                         android:textSize="14sp"
-                        android:layout_gravity="center_vertical" />
+                        android:layout_marginStart="8dp" />
                 </LinearLayout>
 
                 <!-- Challenge 2 -->
@@ -449,14 +497,17 @@
                     android:id="@+id/challenge2Layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp"
+                    android:gravity="center_vertical">
 
                     <CheckBox
                         android:id="@+id/challenge2Checkbox"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:buttonTint="@color/teal_light"
-                        android:enabled="false" />
+                        android:enabled="false"
+                        android:layout_marginEnd="12dp" />
 
                     <TextView
                         android:id="@+id/challenge2Text"
@@ -466,7 +517,7 @@
                         android:text="Loading challenges..."
                         android:textColor="@color/text_medium"
                         android:textSize="14sp"
-                        android:layout_gravity="center_vertical" />
+                        android:lineSpacingMultiplier="1.2" />
 
                     <TextView
                         android:id="@+id/challenge2Progress"
@@ -475,10 +526,10 @@
                         android:text="+0 pts"
                         android:textColor="@color/teal_light"
                         android:textSize="14sp"
-                        android:layout_gravity="center_vertical" />
+                        android:layout_marginStart="8dp" />
                 </LinearLayout>
 
-                <!-- Add Challenge Button for testing -->
+                <!-- View All Challenges Button -->
                 <TextView
                     android:id="@+id/viewAllChallengesButton"
                     android:layout_width="wrap_content"
@@ -487,39 +538,50 @@
                     android:textColor="@color/primary_purple_light"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:layout_marginTop="12dp"
                     android:layout_gravity="center_horizontal"
-                    android:padding="8dp"
-                    android:background="?attr/selectableItemBackground" />
+                    android:padding="12dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:drawableStart="@drawable/ic_arrow_right"
+                    android:drawablePadding="4dp"
+                    android:gravity="center_vertical" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Points History Card -->
+        <!-- Points History Card with improved design -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="24dp"
             app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
+            app:cardElevation="6dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="24dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp">
+                    android:layout_marginBottom="20dp">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Points History"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_dark"
-                        android:textSize="16sp" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Points History"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_dark"
+                            android:textSize="16sp" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/viewByMonth"
@@ -527,16 +589,22 @@
                         android:layout_height="wrap_content"
                         android:text="This Week"
                         android:textColor="@color/primary_purple_light"
-                        android:textSize="14sp"
-                        android:layout_alignParentEnd="true" />
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="8dp" />
                 </RelativeLayout>
 
                 <!-- Chart View Container -->
                 <FrameLayout
                     android:id="@+id/pointsChartContainer"
                     android:layout_width="match_parent"
-                    android:layout_height="180dp"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_height="200dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/rounded_button"
+                    android:backgroundTint="@color/background_light" />
 
                 <TextView
                     android:id="@+id/lifetimePointsText"
@@ -544,7 +612,9 @@
                     android:layout_height="wrap_content"
                     android:text="Total Lifetime Points: 0"
                     android:textColor="@color/text_dark"
-                    android:textSize="14sp" />
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_gravity="center_horizontal" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </LinearLayout>
