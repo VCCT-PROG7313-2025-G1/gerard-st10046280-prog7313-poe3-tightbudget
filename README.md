@@ -362,6 +362,39 @@ What we've demonstrated through this project:
 
 This project was developed for academic purposes as part of the IIE curriculum. All rights reserved by the development team and The Independent Institute of Education.
 
+## 📚 References & Documentation
+
+### **Firebase & Database**
+- [Firebase Authentication Documentation](https://firebase.google.com/docs/auth) - User authentication and security
+- [Firebase Android Setup Guide](https://firebase.google.com/docs/android/setup) - Project configuration and integration
+- [Firebase Realtime Database Structure](https://firebase.google.com/docs/database/android/structure-data) - Data modeling and best practices
+
+### **Android Development**
+- [Android Architecture Components](https://developer.android.com/topic/architecture) - MVVM and modern app architecture
+- [Android ViewModel Guide](https://developer.android.com/topic/libraries/architecture/viewmodel) - UI state management
+- [RecyclerView Implementation](https://developer.android.com/develop/ui/views/layout/recyclerview) - Efficient list displays
+- [View Binding Documentation](https://developer.android.com/topic/libraries/view-binding) - Type-safe view references
+- [Android Logcat Debugging](https://developer.android.com/studio/debug/logcat) - Debugging and logging best practices
+
+### **Kotlin & Programming**
+- [Kotlin Coroutines Overview](https://kotlinlang.org/docs/coroutines-overview.html) - Asynchronous programming
+- [Android UI Design Best Practices](https://www.geeksforgeeks.org/best-practices-for-android-ui-design/) - User interface guidelines
+
+### **Algorithms & Mathematical Models**
+- [Weighted Moving Average Forecasting](https://en.wikipedia.org/wiki/Moving_average#Weighted_moving_average) - Financial prediction algorithms
+- [Moving Average Definition](https://www.investopedia.com/terms/m/movingaverage.asp) - Financial forecasting fundamentals
+- [Time Series Forecasting Techniques](https://otexts.com/fpp3/simple-methods.html) - Statistical forecasting methods
+- [Forecasting: Principles and Practice](https://otexts.com/fpp2/simple-methods.html) - Simple forecasting methods
+- [Exponential Smoothing](https://en.wikipedia.org/wiki/Exponential_smoothing) - Trend analysis and prediction
+- [Gamification Point Systems](https://yukaichou.com/gamification-examples/octalysis-complete-gamification-framework/) - Behavioural motivation algorithms
+
+### **DevOps & Version Control**
+- [GitHub Actions Quickstart](https://docs.github.com/en/actions/writing-workflows/quickstart) - CI/CD automation
+
+### **Inspiration & Research**
+- [PocketSmith Features](https://www.pocketsmith.com/features/) - Financial forecasting inspiration
+- [Gamification in Financial Apps](https://dashdevs.com/blog/gamification-in-financial-apps-unlocking-new-opportunities-for-growth-and-engagement/) - User engagement strategies
+
 ---
 
 <p align="center">
