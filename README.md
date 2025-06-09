@@ -3,137 +3,239 @@
 <p align="center">
 <a href="#"><img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-%230095D5.svg?style=for-the-badge&logo=kotlin&logoColor=white"></a>
 <a href="#"><img alt="Android" src="https://img.shields.io/badge/Android-11%2B-%233DDC84.svg?style=for-the-badge&logo=android&logoColor=white"></a>
-<a href="#"><img alt="Room" src="https://img.shields.io/badge/Room-%23FF6F00.svg?style=for-the-badge&logo=sqlite&logoColor=white"></a>
+<a href="#"><img alt="Firebase" src="https://img.shields.io/badge/Firebase-%23FF6F00.svg?style=for-the-badge&logo=firebase&logoColor=white"></a>
 <a href="#"><img alt="Coroutines" src="https://img.shields.io/badge/Coroutines-%234285F4.svg?style=for-the-badge&logo=kotlin&logoColor=white"></a>
 <a href="#"><img alt="View Binding" src="https://img.shields.io/badge/View%20Binding-%23FF4081.svg?style=for-the-badge&logo=android&logoColor=white"></a>
 <a href="#"><img alt="Material Design" src="https://img.shields.io/badge/Material%20Design-%230081CB.svg?style=for-the-badge&logo=material-design&logoColor=white"></a>
 <a href="#"><img alt="API Level" src="https://img.shields.io/badge/API%20Level-30%2B-%23FF5722.svg?style=for-the-badge&logo=android&logoColor=white"></a>
-<a href="#"><img alt="Version" src="https://img.shields.io/badge/Version-1.0.0-%2300C853.svg?style=for-the-badge&logo=android&logoColor=white"></a>
+<a href="#"><img alt="Version" src="https://img.shields.io/badge/Version-2.0.0-%2300C853.svg?style=for-the-badge&logo=android&logoColor=white"></a>
 </p>
+
+---
+
+## 👥 Development Team
+
+**PROG7313 - Programming 3C / OPSC7311 - Open Source Coding**  
+**The Independent Institute of Education (IIE)**
+
+| Name | Student Number |
+|------|----------------|
+| **Gérard Blankenberg** | ST10046280 |
+| **Khano Tshivhandekano** | ST10298613 |
+| **Ilyaas Kamish** | ST10391174 |
+| **Caleb Searle** | ST10254714 |
 
 ---
 
 ## 📄 Project Overview
 
-TightBudget is a comprehensive budget tracker application designed to help users manage their personal finances effectively through an engaging and intuitive mobile interface. By incorporating gamification elements and powerful visualisation tools, TightBudget transforms the often tedious task of financial management into an enjoyable and rewarding experience.
+TightBudget is a comprehensive, cloud-enabled budget tracker that helps you manage your personal finances through an engaging and intuitive mobile interface. We've built this app to transform the often tedious task of financial management into something genuinely enjoyable and rewarding.
+
+By incorporating advanced gamification elements, powerful visualisation tools, and intelligent forecasting capabilities, TightBudget makes budgeting feel less like a chore and more like a game you actually want to play.
+
+**Built as part of our PROG7313/OPSC7311 Portfolio of Evidence (POE) for 2025.**
 
 ---
 
-## ✨ Key Features
+## ✨ What Makes TightBudget Special
 
-### 👥 User Authentication
-- ✅ Secure Registration & Login
-- ✅ Session Management
-- ✅ Guest Mode
+### 👥 User Authentication & Cloud Storage
+- ✅ Secure registration & login with Firebase Authentication
+- ✅ **Complete Firebase integration** - your data lives safely in the cloud
+- ✅ Cross-device synchronisation (start on your phone, continue anywhere)
+- ✅ Session management that just works
+- ✅ Guest mode for having a quick look around
 
-### 📝 Expense & Income Tracking
-- ✅ Comprehensive Transaction Logging
-- ✅ Category Classification
-- ✅ Date & Time Tracking
-- ✅ Merchant Information
-- ✅ Descriptive Notes
-- ✅ Receipt Attachment
-- ✅ Filtering & Sorting
+### 📝 Smart Transaction Tracking
+- ✅ Log expenses and income with ease
+- ✅ **Recurring transactions** - set up your salary or rent once, forget about it
+- ✅ Custom categories with proper emoji support (because why not? 🍕)
+- ✅ Receipt photo attachment
+- ✅ Advanced filtering that actually makes sense
+- ✅ Search functionality that finds what you're looking for
 
-### 💰 Budget Management
-- ✅ Monthly Budget Goals
-- ✅ Minimum Spending Goals
-- ✅ Category Allocations
-- ✅ Budget Period Selection
-- ✅ Automatic Balancing
-- ✅ Previous Budget Copying
-- ✅ Budget Goal Progress
+### 💰 Intelligent Budget Management
+- ✅ Monthly budget goals with minimum and maximum spending limits
+- ✅ Category budget allocations (know exactly where your money goes)
+- ✅ Auto-balancing (we'll do the maths for you)
+- ✅ Copy previous budgets (because November probably looks like October)
+- ✅ **Visual progress indicators** with colour-coded alerts when you're overspending
 
-### 📊 Financial Analysis & Insights
-- ✅ Spending Breakdown
-- ✅ Trend Analysis
-- ✅ Daily Spending Chart
-- ✅ Forecast Projection
-- ✅ Budget Performance
-- ✅ Category Comparison
-- ✅ Historical Comparison
+### 📊 Advanced Financial Insights
+- ✅ **Interactive charts** showing category spending with budget limits
+- ✅ **Daily spending trends** over whatever period you choose
+- ✅ **Financial forecasting** that predicts your month-end spending
+- ✅ **Visual progress dashboard** with real-time budget performance
+- ✅ Historical comparisons (see how you're improving!)
+- ✅ Smart spending tips based on your actual behaviour
 
-### 🏷️ Category Management
-- ✅ Predefined Categories
-- ✅ Custom Categories
-- ✅ Category Customisation
-- ✅ Category Budget Allocation
-- ✅ Category Performance
+### 🎮 Gamification That Actually Works
+- ✅ **Achievement system** - unlock badges for hitting financial milestones
+- ✅ **Point scoring** - earn points for consistent tracking
+- ✅ **Streak tracking** - keep your daily logging streak alive
+- ✅ **Level progression** based on your financial journey
+- ✅ **Challenge completion** for budget goals and good habits
 
-### 🖥️ User Interface & Experience
-- ✅ Intuitive Dashboard
-- ✅ Interactive Charts
-- ✅ Quick Action Buttons
-- ✅ Guided Navigation
-- ✅ Search Functionality
+### 🏷️ Flexible Category Management
+- ✅ Sensible default categories (with proper emojis!)
+- ✅ Create custom categories that fit your lifestyle
+- ✅ Budget allocation per category
+- ✅ Performance tracking to see where your money actually goes
 
-### 🔒 Data Management & Security
-- ✅ Local Database Storage
-- ✅ Offline Access
-- ✅ Data Backup *(coming soon)*
-- ✅ Cloud Synchronisation *(coming soon)*
+### 🖥️ User Experience That Doesn't Suck
+- ✅ Modern Material Design that feels familiar
+- ✅ Intuitive dashboard with quick actions
+- ✅ Charts and visualisations that are actually useful
+- ✅ Navigation that makes sense
+- ✅ Search that works
+- ✅ **Optimised for mobile** because that's where you'll use it
+
+---
+
+## 🎯 Our Custom Features (Part 3 POE Requirements)
+
+### 🔮 1. Advanced Financial Forecasting
+**Inspired by PocketSmith's forecasting capabilities**
+
+We've built a proper forecasting system that doesn't just guess where your spending is heading - it uses actual intelligence:
+
+- **Multi-scenario predictions**: See high, medium, and low spending forecasts
+- **Historical analysis**: Uses your past 3 months of data for better accuracy
+- **Smart algorithms**: Weighted projections that get smarter over time
+- **Visual indicators**: Charts showing projected vs actual spending
+- **Confidence levels**: Know how reliable the forecast is
+- **Budget impact**: See if you'll be over or under budget by month-end
+- **Actionable insights**: Get specific recommendations to stay on track
+
+### 🔄 2. Intelligent Recurring Transactions
+**Inspired by PocketSmith, Spendee, and Goodbudget automation**
+
+Because entering your rent payment every month is properly tedious:
+
+- **Complete automation**: Set it once, forget about it
+- **Multiple frequencies**: Daily, weekly, monthly, yearly - whatever works
+- **Smart processing**: Runs in the background automatically
+- **Visual status**: Clear indicators for upcoming, due, and overdue transactions
+- **Firebase integration**: Everything syncs across your devices
+- **Flexible management**: Easy to create, edit, or cancel
+- **Reduces manual entry**: Perfect for rent, salary, subscriptions, utilities
+
+### 🏆 3. Comprehensive Gamification System
+**Makes financial management engaging and rewarding**
+
+We've gamified the boring bits so you'll actually want to track your spending:
+
+- **Achievement system**: Unlock badges for financial milestones and good habits
+- **Point scoring**: Earn points for logging transactions, uploading receipts, hitting budget goals
+- **Level progression**: Your financial responsibility level increases with activity
+- **Streak tracking**: Daily logging streaks to keep you motivated
+- **Challenge completion**: Various financial challenges to keep things interesting
+- **Visual progress**: Profile dashboard showing your level, points, achievements, and streaks
+- **Motivation through rewards**: Transform budgeting from chore to something you look forward to
 
 ---
 
 ## 🏗️ Technical Implementation
 
-**Architecture & Design Patterns**
-- MVVM Pattern
-- Repository Pattern
-- Room Database
-- Kotlin Coroutines
-- LiveData
-- Data Binding
+### **Architecture & Design Patterns**
+We've built this using proper software engineering principles:
+- **MVVM Pattern** with Firebase integration
+- **Repository Pattern** for clean data management
+- **Firebase Realtime Database** for cloud storage
+- **Kotlin Coroutines** for smooth, responsive UI
+- **LiveData** for reactive updates
+- **View Binding** for type-safe UI interactions
 
-**Technologies Used**
-- Kotlin
-- Android SDK
-- Room Persistence Library
-- RecyclerView
-- Material Design Components
-- Coroutines
-- View Binding
+### **Technologies We're Using**
+- **Kotlin** - Because Java is showing its age
+- **Android SDK** - Native Android development
+- **Firebase Realtime Database** - Reliable cloud data storage
+- **Firebase Authentication** - Secure user management
+- **Material Design Components** - Modern, familiar UI
+- **Custom Chart Views** - Advanced data visualisation
+- **RecyclerView** with optimised adapters
+- **Coroutines** for background processing that doesn't block the UI
+
+### **Firebase Integration**
+Our Firebase setup includes specialised managers for different aspects:
+- **FirebaseUserManager** - User authentication and management
+- **FirebaseTransactionManager** - All transaction operations
+- **FirebaseBudgetManager** - Budget and category management
+- **FirebaseDataManager** - Unified data coordination
+- **RecurringTransactionManager** - Automated recurring transactions
+- **GamificationManager** - Achievement and progress tracking
 
 ---
 
 ## 🚀 Getting Started
 
-### 📦 Prerequisites
+### 📦 What You'll Need
 ✅ Android Studio Meerkat (2024.3.1+)  
 ✅ JDK 11+  
 ✅ Android SDK API 30+  
 ✅ Kotlin Plugin 1.5+  
-✅ Git
+✅ Git  
+✅ **Physical Android device** (required for final testing - no emulators!)
 
 ### 📝 Installation Steps
 
 ```bash
-git clone https://github.com/yourusername/tightbudget.git
+git clone https://github.com/ST10046280-Blankenberg/tightbudget.git
 cd tightbudget
 ```
 
-1. Open project in Android Studio
-2. Sync Gradle files
-3. Verify Gradle JDK (File > Settings > Build, Execution, Deployment > Gradle → JDK 11+)
-4. Update `local.properties` if needed:
+1. Open the project in Android Studio
+2. Sync Gradle files (should happen automatically)
+3. **Firebase is already configured!** The `google-services.json` file is included in the repository, so you can start using the app straight away
+4. Check Gradle JDK settings (File > Settings > Build, Execution, Deployment > Gradle → JDK 11+)
+5. Update `local.properties` if needed:
    ```properties
    sdk.dir=YOUR_ANDROID_SDK_PATH
    ```
-5. Configure emulator (AVD Manager → Pixel 4 → Android 11+)
-6. Build → Make Project
-7. Run app
+6. **Important**: Test on a physical device for the final submission
+7. Build → Make Project
+8. Run the app and see if everything works
 
 <details>
-<summary>🛠️ Troubleshooting</summary>
+<summary>🔧 Setting Up Your Own Firebase Project (Optional)</summary>
 
-| Issue            | Solution                                  |
-|-----------------|-------------------------------------------|
-| Build Failures   | Check Gradle/Android plugin versions; `./gradlew clean build` |
-| Emulator Issues  | Verify HAXM installed; allocate more RAM  |
-| App Crashes      | Check Logcat; verify permissions/API level |
-| GitHub Actions   | Check error logs in Actions tab; test locally |
+If you want to set up your own Firebase project for development:
+- Create a new Firebase project in the Firebase Console
+- Add your `google-services.json` to the `app/` directory
+- Enable Realtime Database with read/write access
+- Configure authentication if needed
+
+For marking purposes, our configured Firebase instance will work perfectly!
 
 </details>
+
+<details>
+<summary>🛠️ Troubleshooting (Click to expand)</summary>
+
+| Problem | Solution |
+|---------|----------|
+| Firebase won't connect | Check your `google-services.json` is in the right place; verify Firebase project setup |
+| Build failures | Check Gradle/Android plugin versions; try `./gradlew clean build` |
+| Database errors | Verify Firebase Realtime Database rules; check your internet connection |
+| App crashes | Check Logcat for Firebase authentication errors |
+| GitHub Actions failing | Make sure secrets are configured properly for CI/CD |
+
+</details>
+
+---
+
+## 📱 Demonstration Video
+
+**Required for POE Part 3 Submission**
+
+We'll need to create a professional demonstration video that shows:
+- 🎥 **Professional quality** demonstration of all features
+- 📱 **Running on a physical mobile device** (emulators won't cut it)
+- 🎤 **Clear voiceover** explaining what we're showing
+- ☁️ **Demonstrates Firebase data persistence** 
+- 🔗 **Video link** will be included here (YouTube unlisted is recommended)
+
+*Video will be linked here once we've recorded it.*
 
 ---
 
@@ -142,78 +244,127 @@ cd tightbudget
 ```
 app/
  ├── src/main/java/com/example/tightbudget/
- │   ├── adapters/
- │   ├── data/
- │   ├── models/
- │   ├── ui/
- │   ├── utils/
- │   └── *Activity.kt
- ├── res/
+ │   ├── adapters/           # RecyclerView adapters
+ │   ├── firebase/           # All our Firebase managers
+ │   │   ├── FirebaseUserManager.kt
+ │   │   ├── FirebaseTransactionManager.kt
+ │   │   ├── FirebaseBudgetManager.kt
+ │   │   ├── FirebaseDataManager.kt
+ │   │   ├── RecurringTransactionManager.kt
+ │   │   └── GamificationManager.kt
+ │   ├── models/             # Data models
+ │   ├── ui/                 # Custom UI components
+ │   ├── utils/              # Utility classes
+ │   │   ├── ChartUtils.kt   # Custom chart implementations
+ │   │   ├── RecurringTransactionProcessor.kt
+ │   │   └── CategoryConstants.kt
+ │   └── *Activity.kt        # Main activities
+ ├── res/                    # Resources
+ ├── google-services.json    # Firebase configuration
  ├── AndroidManifest.xml
- ├── test/
- └── androidTest/
+ ├── test/                   # Unit tests
+ └── androidTest/            # Integration tests
 ```
 
 ---
 
-## 📖 Detailed App Usage Guide
+## 📖 How to Use TightBudget
 
 <details>
-<summary>Click to expand usage instructions</summary>
+<summary>Click to expand the full usage guide</summary>
 
-### First-Time Setup
-1. ✅ Tap **Sign Up** → enter name, email, password → accept terms *(upcoming)*
-2. ✅ Login → email + password → toggle **Remember Me** *(upcoming)* → **LOG IN**
-3. ✅ Or tap **Continue as guest** (data not persisted if app cleared)
+### Getting Started
+1. ✅ **Sign up** → Enter your name, email, and password → **CREATE ACCOUNT**
+2. ✅ **Log in** → Email and password → **LOG IN**
+3. ✅ Or tap **Continue as guest** (limited functionality, but great for testing)
 
 ### Dashboard Navigation
-1. ✅ Balance at top, budget progress (circle), spending breakdown (pie chart)
-2. ✅ **Quick Actions** → Add Expense, View Budget, Goals
-3. ✅ **Recent Transactions** → tap for details; **See All** for full history
-4. ✅ Bottom navigation → Dashboard / Reports / Add Transaction / Wallet / Settings
+1. ✅ **Financial overview** at the top: your balance, budget progress, spending charts
+2. ✅ **Quick actions**: Add Expense, View Budget, Set Goals
+3. ✅ **Recent transactions**: See your latest entries, tap for details
+4. ✅ **Bottom navigation**: Dashboard / Statistics / Add Transaction / Transactions / Profile
 
 ### Adding Transactions
-1. ✅ Enter type (Expense/Income), amount, merchant, category, optional notes
-2. ✅ Advanced → set date, toggle **Recurring** *(upcoming)*, attach receipt, create category
-3. ✅ Tap **SAVE** → returns to Dashboard
+1. ✅ **Choose type**: Expense or Income toggle
+2. ✅ **Fill in details**: Amount, merchant, category, description
+3. ✅ **Advanced options**: Set date, toggle recurring, attach receipt photo
+4. ✅ **Save**: Everything syncs to Firebase automatically
 
-### Managing Budget Goals
-1. ✅ Go to Budget Goals → select month → set total & minimum → allocate categories
-2. ✅ Adjust sliders or input values → **Auto-Balance** remaining
-3. ✅ Tap **Copy Previous** → adjust → **Save Changes**
+### Setting Up Recurring Transactions
+1. ✅ **Toggle "Recurring"** when adding a transaction
+2. ✅ **Choose frequency**: Daily, weekly, monthly, or yearly
+3. ✅ **Let it run**: The app processes due transactions automatically
+4. ✅ **Manage**: View, edit, or cancel in the Transactions tab
 
-### Viewing & Filtering Transactions
-1. ✅ Go to Wallet tab → view all transactions
-2. ✅ Filters → **Period**, **Category**, **Sort**, search icon
-3. ✅ Tap transaction → view details → view receipt → delete
+### Budget Management
+1. ✅ **Create a budget**: Set your total monthly budget and minimum spending goal
+2. ✅ **Allocate categories**: Distribute your budget across different spending categories
+3. ✅ **Use auto-balance**: Let the app balance remaining amounts for you
+4. ✅ **Track progress**: Visual indicators show spending vs limits
 
-### Analysing Finances
-1. ✅ Reports tab → view charts
-2. ✅ Toggle **Week/Month/Year** → pie/bar → daily line chart → forecasts
-3. ✅ Category Spending → view category budgets, filter, sort
+### Financial Analysis & Forecasting
+1. ✅ **Statistics tab**: Access advanced charts and forecasting
+2. ✅ **Choose periods**: Week, month, year, or custom date ranges
+3. ✅ **Switch chart types**: Toggle between pie, bar, and line charts
+4. ✅ **Check forecasts**: See spending predictions and budget impact
 
-### App Settings & Preferences
-1. ✅ **Settings** → edit profile, change password, manage security
-2. ✅ Toggle notifications, dark mode
-3. ✅ View help docs, send feedback, app info
-4. ✅ **Sign Out**
+### Gamification Features
+1. ✅ **Profile tab**: View your level, points, and achievements
+2. ✅ **Earn points**: Log transactions, upload receipts, meet budget goals
+3. ✅ **Unlock achievements**: Complete various financial milestones
+4. ✅ **Track progress**: Monitor streaks and see your improvement over time
 
 </details>
 
 ---
 
-## 🔭 Future Enhancements
+## 🧪 Testing & Quality Assurance
 
-- 🔗 Firebase Integration
-- 🏆 Achievement Badges
-- 🤖 Budget Forecasting (ML-based)
-- 🔄 Recurring Transactions
-- 📩 Monthly Reports
-- 🚨 Notifications
-- 🌐 Cloud Sync
+We've implemented comprehensive testing to make sure everything works properly:
+
+- **Unit tests**: Core business logic validation
+- **Integration tests**: Firebase connectivity and data flow
+- **UI tests**: User interaction and navigation flows
+- **GitHub Actions**: Automated build and test pipeline
+- **Manual testing**: Comprehensive feature validation on physical devices
 
 ---
 
-## 🏫 Educational Disclaimer
+## 🎓 Academic Context
 
-This project is developed for educational purposes as part of the **PROG7313/OPSC7311 module** at *The Independent Institute of Education*.
+This application represents the culmination of our work for **PROG7313 Programming 3C** and **OPSC7311 Open Source Coding** at The Independent Institute of Education (IIE). 
+
+What we've demonstrated through this project:
+- **Advanced Android development** using modern architectural patterns
+- **Cloud integration** with Firebase services
+- **User experience design** following Material Design principles
+- **Software engineering practices** including proper version control and testing
+- **Problem-solving skills** through innovative custom feature implementation
+
+**Our Portfolio of Evidence Structure:**
+- **Part 1**: Research, Planning & Design
+- **Part 2**: App Prototype Development  
+- **Part 3**: Final App Development with Firebase Integration (this submission)
+
+---
+
+## 🏆 What We've Achieved
+
+- ✅ **Complete Firebase integration** - All data stored securely in the cloud
+- ✅ **Three advanced custom features** - Forecasting, recurring transactions, and gamification
+- ✅ **Professional mobile UI** - Modern Material Design implementation
+- ✅ **Comprehensive testing** - Unit, integration, and manual testing coverage
+- ✅ **Production-ready code** - Clean architecture with proper documentation
+
+---
+
+## 📜 Licence
+
+This project was developed for academic purposes as part of the IIE curriculum. All rights reserved by the development team and The Independent Institute of Education.
+
+---
+
+<p align="center">
+<strong>Built with ❤️ by Team TightBudget</strong><br>
+<em>The Independent Institute of Education - 2025</em>
+</p>
