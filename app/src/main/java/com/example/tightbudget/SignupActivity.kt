@@ -225,7 +225,7 @@ class SignupActivity : AppCompatActivity() {
 
     private fun createAccount() {
         val fullName = binding.fullNameInput.text.toString().trim()
-        val email = binding.emailInput.text.toString().trim()
+        val email = binding.emailInput.text.toString().trim().toLowerCase(Locale.ROOT)
         val password = binding.passwordInput.text.toString()
         val confirmPassword = binding.confirmPasswordInput.text.toString()
 

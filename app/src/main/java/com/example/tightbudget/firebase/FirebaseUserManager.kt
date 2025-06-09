@@ -192,7 +192,14 @@ class FirebaseUserManager {
      */
     suspend fun authenticateUser(email: String, password: String): User? {
         return try {
-            val user = getUserByEmail(email)
+            // Try lowercase first (new standard)
+            var user = getUserByEmail(email.lowercase())
+
+            // If not found, try original case (for legacy users)
+            if (user == null) {
+                user = getUserByEmail(email)
+            }
+
             if (user != null && user.password == password) {
                 Log.d(TAG, "User authenticated successfully")
                 user
