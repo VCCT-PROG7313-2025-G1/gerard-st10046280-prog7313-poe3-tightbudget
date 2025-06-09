@@ -54,6 +54,16 @@ By incorporating advanced gamification elements, powerful visualisation tools, a
 - ✅ Advanced filtering that actually makes sense
 - ✅ Search functionality that finds what you're looking for
 
+### 📸 Cloud Receipt Storage
+- ✅ **Firebase Cloud Storage integration** - Receipt images stored securely in the cloud
+- ✅ **Per-user organisation** - Your receipts are private and organised by user account
+- ✅ **Automatic cloud backup** - Never lose your receipts again
+- ✅ **Cross-device access** - View receipts from any device where you're logged in
+- ✅ **Smart fallback system** - Automatically saves locally if cloud upload fails
+- ✅ **Full-screen receipt viewing** - Tap any receipt to view it in full detail
+- ✅ **Backwards compatibility** - Existing local receipts continue to work perfectly
+- ✅ **Intelligent image loading** - Uses Glide for efficient cloud image display
+
 ### 💰 Intelligent Budget Management
 - ✅ Monthly budget goals with minimum and maximum spending limits
 - ✅ Category budget allocations (know exactly where your money goes)
