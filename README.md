@@ -190,7 +190,7 @@ Our Firebase setup includes specialised managers for different aspects:
 ### 📝 Installation Steps
 
 ```bash
-git clone https://github.com/ST10046280-Blankenberg/tightbudget.git
+git clone https://github.com/ST10046280-Blankenberg/tightbudget.git](https://github.com/VCCT-PROG7313-2025-G1/gerard-st10046280-prog7313-poe3-tightbudget.git
 cd tightbudget
 ```
 
@@ -243,7 +243,7 @@ We'll need to create a professional demonstration video that shows:
 - 📱 **Running on a physical mobile device** (emulators won't cut it)
 - 🎤 **Clear voiceover** explaining what we're showing
 - ☁️ **Demonstrates Firebase data persistence** 
-- 🔗 **Video link** will be included here (YouTube unlisted is recommended)
+- 🔗 **Video link** [YouTube Link](https://www.youtube.com/watch?v=yyDmEkbsInI )
 
 *Video will be linked here once we've recorded it.*
 
