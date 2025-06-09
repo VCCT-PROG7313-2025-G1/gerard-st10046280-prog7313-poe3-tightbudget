@@ -1,5 +1,6 @@
 [versions]
 agp = "8.9.1"
+glide = "4.15.0"
 konfettiXml = "2.0.2"
 kotlin = "2.0.21"
 coreKtx = "1.12.0"
@@ -19,6 +20,7 @@ room = "2.6.1"
 konfetti = "2.0.2"
 googleGmsGoogleServices = "4.4.2"
 firebaseDatabase = "21.0.0"
+firebaseStorage = "21.0.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,6 +30,7 @@ androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRunt
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 #noinspection SimilarGradleDependency
 androidx-room-runtime-v261 = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -41,6 +44,7 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompatVersion" }
 material-v1110 = { module = "com.google.android.material:material", version.ref = "materialVersion" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
