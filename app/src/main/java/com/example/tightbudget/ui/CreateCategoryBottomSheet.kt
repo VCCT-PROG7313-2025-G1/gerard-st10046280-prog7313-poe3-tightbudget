@@ -1,5 +1,6 @@
 package com.example.tightbudget.ui
 
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -19,8 +20,7 @@ import kotlinx.coroutines.launch
 
 /**
  * A bottom sheet dialog for creating a new custom category.
- * Note: For POE purposes, categories are managed through predefined constants
- * in CategoryConstants. This UI provides category selection functionality.
+ * Updated to support user-specific categories in Firebase.
  */
 class CreateCategoryBottomSheet : BottomSheetDialogFragment() {
 
@@ -52,7 +52,7 @@ class CreateCategoryBottomSheet : BottomSheetDialogFragment() {
         setupIconGrid()
         setupColorGrid()
 
-        Log.d("CreateCategorySheet", "onViewCreated triggered - Firebase mode")
+        Log.d("CreateCategorySheet", "onViewCreated triggered - User-specific Firebase mode")
 
         // Close button dismisses the bottom sheet
         binding.closeCreateButton.setOnClickListener {
@@ -60,108 +60,136 @@ class CreateCategoryBottomSheet : BottomSheetDialogFragment() {
             dismiss()
         }
 
-        // Save category button - Updated for Firebase/POE
+        // Save category button - Updated for user-specific Firebase
         binding.saveCategoryButton.setOnClickListener {
-            val name = binding.categoryNameInput.text.toString().trim()
-            val budgetText = binding.budgetInput.text.toString().trim()
-
-            if (name.isEmpty() || budgetText.isEmpty()) {
-                Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT)
-                    .show()
-                return@setOnClickListener
-            }
-
-            val budgetAmount = try {
-                budgetText.toDouble()
-            } catch (e: NumberFormatException) {
-                Toast.makeText(requireContext(), "Invalid budget amount", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            if (budgetAmount < CategoryConstants.MINIMUM_BUDGET_AMOUNT) {
-                Toast.makeText(
-                    requireContext(),
-                    "Budget must be at least R${CategoryConstants.MINIMUM_BUDGET_AMOUNT.toInt()}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@setOnClickListener
-            }
-
-            if (selectedEmoji.isEmpty()) {
-                Toast.makeText(requireContext(), "Please pick an emoji", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            if (selectedColor.isEmpty()) {
-                Toast.makeText(requireContext(), "Please pick a color", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            // Save the category to Firebase
-            lifecycleScope.launch {
-                try {
-                    // Show saving state
-                    binding.saveCategoryButton.isEnabled = false
-                    binding.saveCategoryButton.text = "Saving..."
-
-                    // Check if category already exists
-                    val firebaseCategoryManager = com.example.tightbudget.firebase.FirebaseCategoryManager.getInstance()
-
-                    if (firebaseCategoryManager.categoryExists(name)) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Category '$name' already exists!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@launch
-                    }
-
-                    // Create new category
-                    val newCategory = com.example.tightbudget.models.Category(
-                        name = name,
-                        emoji = selectedEmoji,
-                        color = selectedColor,
-                        budget = budgetAmount
-                    )
-
-                    // Save to Firebase
-                    val savedCategory = firebaseCategoryManager.createCategory(newCategory)
-
-                    Log.d("CreateCategorySheet", "Category '$name' created successfully in Firebase with ID: ${savedCategory.id}")
-
-                    Toast.makeText(
-                        requireContext(),
-                        "Category '$name' created successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    dismiss()
-
-                } catch (e: Exception) {
-                    Log.e("CreateCategorySheet", "Error creating category in Firebase: ${e.message}", e)
-
-                    val errorMessage = when {
-                        e.message?.contains("network") == true ->
-                            "Network error. Please check your connection and try again"
-                        e.message?.contains("already exists") == true ->
-                            "Category '$name' already exists"
-                        else -> "Error creating category: ${e.message}"
-                    }
-
-                    Toast.makeText(
-                        requireContext(),
-                        errorMessage,
-                        Toast.LENGTH_LONG
-                    ).show()
-                } finally {
-                    // Reset button state
-                    binding.saveCategoryButton.isEnabled = true
-                    binding.saveCategoryButton.text = "SAVE CATEGORY"
-                }
-            }
+            saveCategory()
         }
 
-        Log.d("CreateCategorySheet", "Fragment loaded successfully - Firebase mode")
+        Log.d("CreateCategorySheet", "Fragment loaded successfully - User-specific Firebase mode")
+    }
+
+    /**
+     * Saves a new category to Firebase (user-specific)
+     */
+    private fun saveCategory() {
+        val name = binding.categoryNameInput.text.toString().trim()
+        val budgetText = binding.budgetInput.text.toString().trim()
+
+        // Input validation
+        if (name.isEmpty() || budgetText.isEmpty()) {
+            Toast.makeText(requireContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val budgetAmount = try {
+            budgetText.toDouble()
+        } catch (e: NumberFormatException) {
+            Toast.makeText(requireContext(), "Invalid budget amount", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (budgetAmount < CategoryConstants.MINIMUM_BUDGET_AMOUNT) {
+            Toast.makeText(
+                requireContext(),
+                "Budget must be at least R${CategoryConstants.MINIMUM_BUDGET_AMOUNT.toInt()}",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        if (selectedEmoji.isEmpty()) {
+            Toast.makeText(requireContext(), "Please pick an emoji", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (selectedColor.isEmpty()) {
+            Toast.makeText(requireContext(), "Please pick a color", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Get current user ID
+        val userId = getCurrentUserId()
+        if (userId == -1) {
+            Toast.makeText(requireContext(), "Please log in to create categories", Toast.LENGTH_SHORT).show()
+            dismiss()
+            return
+        }
+
+        // Save the category to Firebase (user-specific)
+        lifecycleScope.launch {
+            try {
+                // Show saving state
+                binding.saveCategoryButton.isEnabled = false
+                binding.saveCategoryButton.text = "Saving..."
+
+                val firebaseCategoryManager = com.example.tightbudget.firebase.FirebaseCategoryManager.getInstance()
+
+                // Check if category already exists for this user
+                if (firebaseCategoryManager.categoryExistsForUser(name, userId)) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Category '$name' already exists for your account!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@launch
+                }
+
+                // Create new category for this user
+                val newCategory = com.example.tightbudget.models.Category(
+                    id = 0, // Will be set by Firebase
+                    name = name,
+                    emoji = selectedEmoji,
+                    color = selectedColor,
+                    budget = budgetAmount
+                )
+
+                // Save to Firebase with user ID
+                val savedCategory = firebaseCategoryManager.createCategory(newCategory, userId)
+
+                Log.d("CreateCategorySheet", "Category '$name' created successfully for user $userId with ID: ${savedCategory.id}")
+
+                Toast.makeText(
+                    requireContext(),
+                    "Category '$name' created successfully!",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                dismiss()
+
+            } catch (e: Exception) {
+                Log.e("CreateCategorySheet", "Error creating category for user $userId: ${e.message}", e)
+
+                val errorMessage = when {
+                    e.message?.contains("network") == true ->
+                        "Network error. Please check your connection and try again"
+                    e.message?.contains("already exists") == true ->
+                        "Category '$name' already exists for your account"
+                    e.message?.contains("permission") == true ->
+                        "Permission denied. Please log in and try again"
+                    else -> "Error creating category: ${e.message}"
+                }
+
+                Toast.makeText(
+                    requireContext(),
+                    errorMessage,
+                    Toast.LENGTH_LONG
+                ).show()
+            } finally {
+                // Reset button state
+                binding.saveCategoryButton.isEnabled = true
+                binding.saveCategoryButton.text = "SAVE CATEGORY"
+            }
+        }
+    }
+
+    /**
+     * Gets the current user ID from SharedPreferences
+     */
+    private fun getCurrentUserId(): Int {
+        val sharedPreferences = requireContext().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val userId = sharedPreferences.getInt("current_user_id", -1)
+        Log.d("CreateCategorySheet", "Current user ID: $userId")
+        return userId
     }
 
     /// Set up the emoji grid with emojis for different categories

@@ -8,7 +8,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.tightbudget.databinding.ActivityLoginBinding
+import com.example.tightbudget.firebase.FirebaseCategoryManager
 import com.example.tightbudget.firebase.FirebaseUserManager
+import com.example.tightbudget.utils.CategoryMigrationHelper
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -32,7 +34,7 @@ class LoginActivity : AppCompatActivity() {
         setupClickListeners()
 
         // Log for debugging
-        Log.d(TAG, "LoginActivity created with Firebase integration")
+        Log.d(TAG, "LoginActivity created with Firebase integration and user-specific categories")
     }
 
     private fun setupClickListeners() {
@@ -151,16 +153,8 @@ class LoginActivity : AppCompatActivity() {
                         // Successful login
                         Log.d(TAG, "User authenticated successfully: ${authenticatedUser.email}")
 
-                        // Save user session
-                        saveUserSession(authenticatedUser.id)
-
-                        Toast.makeText(this@LoginActivity, "Login successful", Toast.LENGTH_SHORT).show()
-
-                        // Navigate to dashboard
-                        val intent = Intent(this@LoginActivity, DashboardActivity::class.java)
-                        intent.putExtra("USER_EMAIL", email)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        startActivity(intent)
+                        // Handle successful login with category setup
+                        onLoginSuccess(authenticatedUser.id, email)
 
                     } else {
                         // Authentication failed
@@ -194,6 +188,42 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Handle successful login - includes category migration/seeding
+     */
+    private fun onLoginSuccess(userId: Int, email: String) {
+        // Save user session
+        saveUserSession(userId)
+
+        // Show success message
+        Toast.makeText(this@LoginActivity, "Login successful", Toast.LENGTH_SHORT).show()
+
+        // Ensure user has categories (migration + seeding) in background
+        lifecycleScope.launch {
+            try {
+                Log.d(TAG, "Setting up categories for user: $userId")
+                val hasCategories = CategoryMigrationHelper.ensureUserHasCategories(userId)
+                if (hasCategories) {
+                    Log.d(TAG, "User $userId has categories ready")
+                } else {
+                    Log.w(TAG, "Failed to ensure categories for user $userId")
+                    // Still proceed to dashboard - categories will be created on-demand if needed
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error setting up categories for user $userId: ${e.message}", e)
+                // Don't show error to user - this is a background operation
+            }
+
+            // Navigate to dashboard regardless of category setup result
+            runOnUiThread {
+                val intent = Intent(this@LoginActivity, DashboardActivity::class.java)
+                intent.putExtra("USER_EMAIL", email)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+            }
+        }
+    }
+
     // This method is called to save the user session
     private fun saveUserSession(userId: Int) {
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
@@ -207,5 +237,22 @@ class LoginActivity : AppCompatActivity() {
         }
         Log.d(TAG, "Saved user session with ID: $userId")
     }
-}
 
+    /**
+     * Seeds default categories for a user after successful login (DEPRECATED)
+     * Use CategoryMigrationHelper.ensureUserHasCategories() instead
+     */
+    @Deprecated("Use CategoryMigrationHelper.ensureUserHasCategories() instead")
+    private fun seedUserCategoriesAfterLogin(userId: Int) {
+        lifecycleScope.launch {
+            try {
+                Log.d(TAG, "Seeding default categories for user: $userId")
+                val firebaseCategoryManager = FirebaseCategoryManager.getInstance()
+                firebaseCategoryManager.seedDefaultCategoriesForUser(userId)
+                Log.d(TAG, "Successfully seeded categories for user: $userId")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error seeding categories for user $userId: ${e.message}", e)
+            }
+        }
+    }
+}
