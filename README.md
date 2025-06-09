@@ -358,6 +358,14 @@ What we've demonstrated through this project:
 
 ---
 
+## 📋 Lecturer Feedback & Improvements
+
+**Part 2 Results**
+
+We were fortunate to receive full marks for Part 2 of the Portfolio of Evidence, with no specific feedback requiring addressed improvements.
+
+---
+
 ## 🏆 What We've Achieved
 
 - ✅ **Complete Firebase integration** - All data stored securely in the cloud
