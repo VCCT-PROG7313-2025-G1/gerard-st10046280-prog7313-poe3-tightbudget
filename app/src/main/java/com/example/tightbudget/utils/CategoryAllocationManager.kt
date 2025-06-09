@@ -3,8 +3,10 @@ package com.example.tightbudget.utils
 import android.util.Log
 import com.example.tightbudget.firebase.FirebaseBudgetManager
 import com.example.tightbudget.firebase.FirebaseDataManager
+import com.example.tightbudget.firebase.FirebaseCategoryManager
 import com.example.tightbudget.models.CategoryBudget
 import com.example.tightbudget.ui.CategoryBudgetItem
+import com.example.tightbudget.utils.EmojiUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Calendar
@@ -14,12 +16,12 @@ import java.util.Calendar
  * and distribution algorithms using Firebase instead of Room database.
  * This class is responsible for:
  * - Loading category allocations for a specific budget goal from Firebase
- * - Creating default allocations for a new budget goal
+ * - Creating default allocations for a new budget goal using custom categories
  * - Saving category allocations to Firebase
  * - Adjusting allocations when the total budget changes
  * - Distributing additional amounts across categories
  * - Calculating spending statistics by category from Firebase
- * Updated to use Firebase Realtime Database.
+ * Updated to use Firebase Realtime Database and custom categories.
  */
 class CategoryAllocationManager {
     private val TAG = "CategoryAllocationManager"
@@ -27,6 +29,7 @@ class CategoryAllocationManager {
     // Firebase managers
     private val firebaseBudgetManager = FirebaseBudgetManager.getInstance()
     private val firebaseDataManager = FirebaseDataManager.getInstance()
+    private val firebaseCategoryManager = FirebaseCategoryManager.getInstance()
 
     /**
      * Loads category allocations for a specific budget goal from Firebase
@@ -60,72 +63,66 @@ class CategoryAllocationManager {
         }
 
     /**
-     * Creates default allocations for a new budget goal
+     * Creates default allocations for a new budget goal using user-specific categories from Firebase
      */
-    suspend fun createDefaultAllocations(totalBudget: Double): List<CategoryBudgetItem> =
+    suspend fun createDefaultAllocations(totalBudget: Double, userId: Int): List<CategoryBudgetItem> =
         withContext(Dispatchers.IO) {
             try {
-                Log.d(TAG, "Creating default allocations for budget: $totalBudget")
+                Log.d(TAG, "Creating default allocations for budget: $totalBudget, userId: $userId")
 
-                // Use predefined categories for POE demonstration
-                val predefinedCategories = getPredefinedCategories()
-
-                // Smart allocation algorithm:
-                // 1. Essential categories get higher percentage
-                // 2. Other categories get even distribution of remaining budget
-
-                val essentialCategories = listOf("Housing", "Groceries", "Utilities", "Transport")
-                val essentialPercentage = 0.65 // 65% for essential categories
-
-                val results = mutableListOf<CategoryBudgetItem>()
-                var remainingBudget = totalBudget
-
-                // First, allocate to essentials
-                val essentialCats = predefinedCategories.filter {
-                    essentialCategories.contains(it.name)
+                if (userId == -1) {
+                    Log.w(TAG, "Invalid userId, using predefined categories")
+                    val predefinedCategories = getPredefinedCategories()
+                    return@withContext createAllocationsFromCategories(predefinedCategories, totalBudget)
                 }
 
-                if (essentialCats.isNotEmpty()) {
-                    val essentialBudget = totalBudget * essentialPercentage
-                    remainingBudget -= essentialBudget
+                // Load user-specific categories from Firebase
+                val userCategories = try {
+                    val categories = firebaseCategoryManager.getAllCategoriesForUser(userId)
+                    Log.d(TAG, "Loaded ${categories.size} categories from Firebase for user $userId")
+                    categories
+                } catch (e: Exception) {
+                    Log.w(TAG, "Could not load user categories from Firebase: ${e.message}")
+                    emptyList()
+                }
 
-                    // Distribute essential budget among essential categories
-                    val perEssentialCat = essentialBudget / essentialCats.size
+                // Use user categories if available, otherwise seed defaults and use them
+                val categoriesToUse = if (userCategories.isNotEmpty()) {
+                    Log.d(TAG, "Using ${userCategories.size} user-specific categories")
+                    userCategories.map {
+                        Log.d(TAG, "Converting category: ${it.name}")
+                        CategoryData(it.name, it.emoji ?: "📝", it.color, false)
+                    }
+                } else {
+                    Log.d(TAG, "No user categories found, seeding defaults")
+                    try {
+                        // Seed default categories for this user
+                        firebaseCategoryManager.seedDefaultCategoriesForUser(userId)
+                        // Try loading again after seeding
+                        val seededCategories = firebaseCategoryManager.getAllCategoriesForUser(userId)
+                        Log.d(TAG, "After seeding, loaded ${seededCategories.size} categories")
 
-                    for (cat in essentialCats) {
-                        results.add(
-                            CategoryBudgetItem(
-                                categoryName = cat.name,
-                                emoji = cat.emoji,
-                                color = cat.color,
-                                allocation = perEssentialCat
-                            )
-                        )
+                        if (seededCategories.isNotEmpty()) {
+                            seededCategories.map {
+                                Log.d(TAG, "Converting seeded category: ${it.name}")
+                                CategoryData(it.name, it.emoji ?: "📝", it.color, false)
+                            }
+                        } else {
+                            Log.d(TAG, "Seeding failed, falling back to predefined categories")
+                            getPredefinedCategories()
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error seeding categories: ${e.message}", e)
+                        getPredefinedCategories()
                     }
                 }
 
-                // Distribute remaining budget to other categories
-                val otherCats = predefinedCategories.filter {
-                    !essentialCategories.contains(it.name)
+                Log.d(TAG, "Final categories to use: ${categoriesToUse.size}")
+                for (cat in categoriesToUse) {
+                    Log.d(TAG, "Category to allocate: ${cat.name}")
                 }
 
-                if (otherCats.isNotEmpty()) {
-                    val perOtherCat = remainingBudget / otherCats.size
-
-                    for (cat in otherCats) {
-                        results.add(
-                            CategoryBudgetItem(
-                                categoryName = cat.name,
-                                emoji = cat.emoji,
-                                color = cat.color,
-                                allocation = perOtherCat
-                            )
-                        )
-                    }
-                }
-
-                Log.d(TAG, "Created ${results.size} default allocations")
-                return@withContext results
+                return@withContext createAllocationsFromCategories(categoriesToUse, totalBudget)
 
             } catch (e: Exception) {
                 Log.e(TAG, "Error creating default allocations: ${e.message}", e)
@@ -134,28 +131,92 @@ class CategoryAllocationManager {
         }
 
     /**
-     * Get predefined categories for POE demonstration
+     * Helper method to create allocations from a list of categories
      */
-    private fun getPredefinedCategories(): List<PredefinedCategory> {
+    private fun createAllocationsFromCategories(categories: List<CategoryData>, totalBudget: Double): List<CategoryBudgetItem> {
+        // Smart allocation algorithm:
+        // 1. Essential categories get higher percentage
+        // 2. Non-essential categories get remaining amount
+        val essentialCategoryNames = listOf("housing", "groceries", "food", "utilities", "transport")
+        val essentialPercentage = 0.65 // 65% for essential categories
+
+        // Separate essential and non-essential categories
+        val essentialCategories = categories.filter { cat ->
+            essentialCategoryNames.any { essential ->
+                cat.name.lowercase().contains(essential)
+            }
+        }
+
+        val nonEssentialCategories = categories.filter { cat ->
+            !essentialCategoryNames.any { essential ->
+                cat.name.lowercase().contains(essential)
+            }
+        }
+
+        val results = mutableListOf<CategoryBudgetItem>()
+
+        // Allocate to essential categories first
+        if (essentialCategories.isNotEmpty()) {
+            val essentialBudget = totalBudget * essentialPercentage
+            val perEssentialCat = essentialBudget / essentialCategories.size
+
+            for (cat in essentialCategories) {
+                results.add(
+                    CategoryBudgetItem(
+                        categoryName = cat.name,
+                        emoji = cat.emoji,
+                        color = cat.color,
+                        allocation = perEssentialCat
+                    )
+                )
+            }
+        }
+
+        // Allocate remaining to non-essential categories
+        if (nonEssentialCategories.isNotEmpty()) {
+            val remainingBudget = totalBudget * (1.0 - essentialPercentage)
+            val perOtherCat = remainingBudget / nonEssentialCategories.size
+
+            for (cat in nonEssentialCategories) {
+                results.add(
+                    CategoryBudgetItem(
+                        categoryName = cat.name,
+                        emoji = cat.emoji,
+                        color = cat.color,
+                        allocation = perOtherCat
+                    )
+                )
+            }
+        }
+
+        Log.d(TAG, "Created ${results.size} default allocations")
+        return results
+    }
+
+    /**
+     * Get predefined categories as fallback when no custom categories exist
+     */
+    private fun getPredefinedCategories(): List<CategoryData> {
         return listOf(
-            PredefinedCategory("Housing", EmojiUtils.getCategoryEmoji("Housing"), "#4CAF50"),
-            PredefinedCategory("Groceries", EmojiUtils.getCategoryEmoji("Groceries"), "#FF9800"),
-            PredefinedCategory("Utilities", EmojiUtils.getCategoryEmoji("Utilities"), "#FFC107"),
-            PredefinedCategory("Transport", EmojiUtils.getCategoryEmoji("Transport"), "#2196F3"),
-            PredefinedCategory("Entertainment", EmojiUtils.getCategoryEmoji("Entertainment"), "#9C27B0"),
-            PredefinedCategory("Health", EmojiUtils.getCategoryEmoji("Health"), "#E91E63"),
-            PredefinedCategory("Shopping", EmojiUtils.getCategoryEmoji("Shopping"), "#00BCD4"),
-            PredefinedCategory("Education", EmojiUtils.getCategoryEmoji("Education"), "#3F51B5")
+            CategoryData("Housing", EmojiUtils.getCategoryEmoji("Housing"), "#4CAF50", true),
+            CategoryData("Groceries", EmojiUtils.getCategoryEmoji("Groceries"), "#FF9800", true),
+            CategoryData("Utilities", EmojiUtils.getCategoryEmoji("Utilities"), "#FFC107", true),
+            CategoryData("Transport", EmojiUtils.getCategoryEmoji("Transport"), "#2196F3", true),
+            CategoryData("Entertainment", EmojiUtils.getCategoryEmoji("Entertainment"), "#9C27B0", false),
+            CategoryData("Health", EmojiUtils.getCategoryEmoji("Health"), "#E91E63", false),
+            CategoryData("Shopping", EmojiUtils.getCategoryEmoji("Shopping"), "#00BCD4", false),
+            CategoryData("Education", EmojiUtils.getCategoryEmoji("Education"), "#3F51B5", false)
         )
     }
 
     /**
-     * Helper data class for predefined categories
+     * Helper data class for category data
      */
-    private data class PredefinedCategory(
+    private data class CategoryData(
         val name: String,
         val emoji: String,
-        val color: String
+        val color: String,
+        val isEssential: Boolean = false
     )
 
     /**
@@ -171,6 +232,7 @@ class CategoryAllocationManager {
             "health" -> "#E91E63"
             "shopping" -> "#00BCD4"
             "education" -> "#3F51B5"
+            "fitness" -> "#FF5722"
             else -> "#9E9E9E"
         }
     }
@@ -263,54 +325,27 @@ class CategoryAllocationManager {
                 year,
                 month - 1,
                 calendar.getActualMaximum(Calendar.DAY_OF_MONTH),
-                23,
-                59,
-                59
+                23, 59, 59
             ) // Last day of month
             val endDate = calendar.time
 
-            // Get transactions for the period from Firebase
+            // Get transactions for the month from Firebase
             val transactions = firebaseDataManager.getTransactionsForPeriod(userId, startDate, endDate)
 
-            // Group transactions by category and sum amounts (only expenses)
-            val results = transactions
-                .filter { it.isExpense }
+            // Group by category and sum amounts
+            val categorySpending = transactions
+                .filter { it.isExpense } // Only include expenses
                 .groupBy { it.category }
-                .mapValues { entry ->
-                    entry.value.sumOf { it.amount }
+                .mapValues { (_, transactions) ->
+                    transactions.sumOf { it.amount }
                 }
 
-            Log.d(TAG, "Calculated spending stats for ${results.size} categories from Firebase")
-            return@withContext results
+            Log.d(TAG, "Calculated spending for ${categorySpending.size} categories")
+            return@withContext categorySpending
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error calculating category spending from Firebase: ${e.message}", e)
-            return@withContext emptyMap<String, Double>()
-        }
-    }
-
-    /**
-     * Get category spending for current month from Firebase
-     */
-    suspend fun getCurrentMonthSpending(userId: Int): Map<String, Double> {
-        val calendar = Calendar.getInstance()
-        return getCategorySpendingStats(
-            userId,
-            calendar.get(Calendar.MONTH) + 1, // 0-based to 1-based
-            calendar.get(Calendar.YEAR)
-        )
-    }
-
-    /**
-     * Get total allocated budget for a budget goal from Firebase
-     */
-    suspend fun getTotalAllocated(budgetGoalId: Int): Double {
-        return try {
-            val categoryBudgets = firebaseBudgetManager.getCategoryBudgetsForGoal(budgetGoalId)
-            categoryBudgets.sumOf { it.allocation }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error getting total allocated from Firebase: ${e.message}", e)
-            0.0
+            Log.e(TAG, "Error calculating category spending stats: ${e.message}", e)
+            return@withContext emptyMap()
         }
     }
 }

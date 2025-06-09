@@ -11,27 +11,15 @@ class MyApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d("MyApp", "TightBudget app started - Firebase mode")
+        Log.d("MyApp", "TightBudget app started - Firebase mode with user-specific categories")
 
-        // Room database initialization removed - now using Firebase
-        // Seed default categories to Firebase on first launch
-        seedDefaultCategoriesToFirebase()
+        // Note: We no longer seed global categories here since categories are now user-specific
+        // Categories will be seeded when a user first logs in or creates an account
+        // This is handled in:
+        // 1. LoginActivity - when user logs in successfully
+        // 2. RegisterActivity - when user creates a new account
+        // 3. Individual activities when they detect no categories exist for the user
 
         Log.d("MyApp", "Firebase managers initialized successfully")
-    }
-
-    /**
-     * Seeds default categories to Firebase if none exist
-     */
-    private fun seedDefaultCategoriesToFirebase() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val firebaseCategoryManager = FirebaseCategoryManager.getInstance()
-                firebaseCategoryManager.seedDefaultCategories()
-                Log.d("MyApp", "Default categories seeded to Firebase")
-            } catch (e: Exception) {
-                Log.e("MyApp", "Error seeding categories to Firebase: ${e.message}", e)
-            }
-        }
     }
 }
