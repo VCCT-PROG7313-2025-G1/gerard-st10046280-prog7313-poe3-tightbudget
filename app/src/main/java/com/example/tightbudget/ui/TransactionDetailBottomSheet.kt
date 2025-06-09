@@ -11,6 +11,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
 import com.example.tightbudget.R
 import com.example.tightbudget.databinding.FragmentTransactionDetailBinding
 import com.example.tightbudget.firebase.FirebaseCategoryManager
@@ -198,37 +199,71 @@ class TransactionDetailBottomSheet : BottomSheetDialogFragment() {
 
     /**
      * Loads and displays the receipt image if one exists for this transaction.
+     * Now supports both cloud storage URLs and local file paths.
      */
     private fun handleReceiptImage() {
         // Only proceed if there's a receipt path saved
         if (!transaction.receiptPath.isNullOrEmpty()) {
             try {
-                val receiptFile = File(transaction.receiptPath!!)
-                if (receiptFile.exists()) {
-                    // Show the receipt section
+                val receiptPath = transaction.receiptPath!!
+
+                if (receiptPath.startsWith("https://")) {
+                    // Cloud storage image
+                    Log.d(TAG, "Loading cloud storage image: $receiptPath")
                     binding.receiptSection?.visibility = View.VISIBLE
 
-                    // Load the image from the file path
-                    binding.receiptImage?.setImageURI(Uri.fromFile(receiptFile))
+                    // Load cloud image using Glide
+                    Glide.with(requireContext())
+                        .load(receiptPath)
+                        .into(binding.receiptImage!!)
 
                     // Set up full-screen viewing when clicked
                     binding.viewFullImageBtn?.setOnClickListener {
-                        showFullScreenReceipt(receiptFile)
+                        showFullScreenCloudReceipt(receiptPath)
                     }
+
                 } else {
-                    // Hide receipt section if file doesn't exist
-                    binding.receiptSection?.visibility = View.GONE
-                    Log.d(TAG, "Receipt file does not exist: ${transaction.receiptPath}")
+                    // Local file image (your existing logic)
+                    val receiptFile = File(receiptPath)
+                    if (receiptFile.exists()) {
+                        binding.receiptSection?.visibility = View.VISIBLE
+                        binding.receiptImage?.setImageURI(Uri.fromFile(receiptFile))
+
+                        binding.viewFullImageBtn?.setOnClickListener {
+                            showFullScreenReceipt(receiptFile) // Your existing method
+                        }
+                    } else {
+                        binding.receiptSection?.visibility = View.GONE
+                        Log.d(TAG, "Receipt file does not exist: $receiptPath")
+                    }
                 }
+
             } catch (e: Exception) {
-                // Handle errors gracefully
                 binding.receiptSection?.visibility = View.GONE
                 Log.e(TAG, "Error loading receipt: ${e.message}")
             }
         } else {
-            // No receipt path, so hide the section
             binding.receiptSection?.visibility = View.GONE
         }
+    }
+
+    /**
+     * Shows cloud receipt in full screen using the same style as local receipts
+     */
+    private fun showFullScreenCloudReceipt(imageUrl: String) {
+        val dialog = Dialog(requireContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+
+        val imageView = ImageView(requireContext())
+        imageView.scaleType = ImageView.ScaleType.FIT_CENTER
+        imageView.setOnClickListener { dialog.dismiss() }
+
+        // Load cloud image
+        Glide.with(requireContext())
+            .load(imageUrl)
+            .into(imageView)
+
+        dialog.setContentView(imageView)
+        dialog.show()
     }
 
     /**
